@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload as UploadIcon, FileText, AlertTriangle, HelpCircle, Download, Info } from 'lucide-react';
+import { FileText, AlertTriangle, HelpCircle, Download, Info } from 'lucide-react';
 import type { Tab } from '../App';
 
 interface NavigationProps {
@@ -8,7 +8,7 @@ interface NavigationProps {
 }
 
 const tabs = [
-  { id: 'upload' as Tab, label: 'Upload & Analyze', icon: UploadIcon },
+  { id: 'upload' as Tab, label: 'Analyze Document', icon: FileText },
   { id: 'simplified' as Tab, label: 'Simplified View', icon: FileText },
   { id: 'clauses' as Tab, label: 'Confusing Clauses', icon: AlertTriangle },
   { id: 'questions' as Tab, label: 'AI Questions', icon: HelpCircle },

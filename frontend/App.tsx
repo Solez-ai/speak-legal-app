@@ -46,22 +46,18 @@ export default function App() {
     const type = hashParams.get('type');
 
     if (accessToken && user && type === 'signup') {
-      setCurrentPage('dashboard');
+      setCurrentPage('home');
       window.history.replaceState(null, '', window.location.pathname);
       return;
     }
-
-    if (user && currentPage === 'home' && !appState.analysisResult) {
-      setCurrentPage('dashboard');
-    }
-  }, [user, loading, initializing, currentPage, appState.analysisResult]);
+  }, [user, loading, initializing]);
 
   useEffect(() => {
     const handlePopState = () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       if (accessToken && user) {
-        setCurrentPage('dashboard');
+        setCurrentPage('home');
         window.history.replaceState(null, '', window.location.pathname);
       }
     };
@@ -75,11 +71,6 @@ export default function App() {
     setSelectedDocument(null);
     if (page === 'home') {
       setActiveTab('upload');
-      setAppState({
-        originalText: '',
-        analysisResult: null,
-        isAnalyzing: false
-      });
     }
   };
 
@@ -99,11 +90,7 @@ export default function App() {
   };
 
   const handleAnalysisComplete = () => {
-    if (user) {
-      setCurrentPage('dashboard');
-    } else {
-      setActiveTab('simplified');
-    }
+    setActiveTab('simplified');
   };
 
   const handleShowAuth = () => {

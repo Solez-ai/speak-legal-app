@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, User, LogOut, Settings, FileText, AlertCircle } from 'lucide-react';
+import { LogIn, User, LogOut, Settings, FileText, AlertCircle, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,7 +43,7 @@ export function Header({ onNavigate }: HeaderProps) {
           <div className="flex items-center justify-between h-16">
             <div 
               className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => onNavigate?.(user ? 'dashboard' : 'home')}
+              onClick={() => onNavigate?.('home')}
             >
               <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">SL</span>
@@ -98,11 +98,18 @@ export function Header({ onNavigate }: HeaderProps) {
                       </div>
                       <DropdownMenuSeparator className="bg-gray-800" />
                       <DropdownMenuItem 
+                        onClick={() => onNavigate?.('home')}
+                        className="text-gray-300 hover:bg-gray-800 hover:text-white cursor-pointer"
+                      >
+                        <Home className="mr-2 h-4 w-4" />
+                        New Document
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
                         onClick={() => onNavigate?.('dashboard')}
                         className="text-gray-300 hover:bg-gray-800 hover:text-white cursor-pointer"
                       >
                         <User className="mr-2 h-4 w-4" />
-                        Dashboard
+                        My Documents
                         {documents.length > 0 && (
                           <Badge variant="outline" className="ml-auto border-gray-600 text-gray-400">
                             {documents.length}

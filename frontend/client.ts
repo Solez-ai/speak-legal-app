@@ -83,6 +83,7 @@ export interface ClientOptions {
  * Import the endpoint handlers to derive the types for the client.
  */
 import { analyze as api_legal_analyze_analyze } from "~backend/legal/analyze";
+import { chat as api_legal_chat_chat } from "~backend/legal/chat";
 
 export namespace legal {
 
@@ -92,6 +93,7 @@ export namespace legal {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.analyze = this.analyze.bind(this)
+            this.chat = this.chat.bind(this)
         }
 
         /**
@@ -101,6 +103,15 @@ export namespace legal {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/legal/analyze`, {method: "POST", body: JSON.stringify(params)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_legal_analyze_analyze>
+        }
+
+        /**
+         * Chats with Kovex AI legal assistant for general legal information and concepts.
+         */
+        public async chat(params: RequestType<typeof api_legal_chat_chat>): Promise<ResponseType<typeof api_legal_chat_chat>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/legal/chat`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_legal_chat_chat>
         }
     }
 }

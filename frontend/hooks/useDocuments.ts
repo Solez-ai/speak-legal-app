@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, saveDocument as saveDocumentToSupabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import type { Document } from '../lib/supabase';
 import { useAuth } from './useAuth';
@@ -12,7 +12,11 @@ export function useDocuments() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setDocuments([]);
+      setLoading(false);
+      return;
+    }
 
     const fetchDocuments = async () => {
       try {
@@ -51,6 +55,40 @@ export function useDocuments() {
     }
   }, [user]);
 
+  const saveDocument = async (
+    title: string,
+    rawInput: string,
+    simplifiedSections: any[],
+    confusingClauses: any[],
+    suggestedQuestions: any[]
+  ) => {
+    if (!user) {
+      console.log('No user logged in, skipping document save');
+      return;
+    }
+
+    try {
+      const savedDoc = await saveDocumentToSupabase(
+        title,
+        rawInput,
+        simplifiedSections,
+        confusingClauses,
+        suggestedQuestions
+      );
+      
+      toast.success('Document saved successfully!');
+      
+      // Add to local state immediately
+      setDocuments(prev => [savedDoc, ...prev]);
+      
+      return savedDoc;
+    } catch (error) {
+      console.error('Error saving document:', error);
+      toast.error('Failed to save document');
+      throw error;
+    }
+  };
+
   const deleteDocument = async (id: string, title: string) => {
     try {
       const { error } = await supabase
@@ -71,6 +109,7 @@ export function useDocuments() {
   return {
     documents,
     loading,
+    saveDocument,
     deleteDocument
   };
 }

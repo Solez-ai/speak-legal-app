@@ -7,7 +7,7 @@
     "build": "cd ../frontend \u0026\u0026 bun install \u0026\u0026 vite build --outDir=../backend/frontend/dist"
   },
   "dependencies": {
-    "encore.dev": "^1.48.2"
+    "encore.dev": "^1.48.4"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

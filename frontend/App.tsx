@@ -71,6 +71,12 @@ export default function App() {
     setSelectedDocument(null);
     if (page === 'home') {
       setActiveTab('upload');
+      // Reset app state when going to home
+      setAppState({
+        originalText: '',
+        analysisResult: null,
+        isAnalyzing: false
+      });
     }
   };
 

@@ -102,7 +102,7 @@ export function Header({ onNavigate }: HeaderProps) {
                         className="text-gray-300 hover:bg-gray-800 hover:text-white cursor-pointer"
                       >
                         <Home className="mr-2 h-4 w-4" />
-                        New Document
+                        Analyze Document
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onNavigate?.('dashboard')}

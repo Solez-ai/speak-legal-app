@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Calendar, Search, Filter, Trash2, Download, Eye, AlertTriangle, TrendingUp, Upload } from 'lucide-react';
+import { Plus, FileText, Calendar, Search, Filter, Trash2, Download, Eye, AlertTriangle, TrendingUp, Upload, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -161,6 +161,7 @@ Always consult with a qualified attorney for legal advice.
               variant="outline"
               className="border-gray-700 text-gray-300 hover:bg-gray-800"
             >
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
           </div>
@@ -301,10 +302,16 @@ Always consult with a qualified attorney for legal advice.
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-white mb-2">No documents yet</h3>
                     <p className="text-gray-400 mb-4">Upload your first legal document to get started</p>
-                    <Button onClick={handleUploadDocument} className="bg-purple-600 hover:bg-purple-700">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Document
-                    </Button>
+                    <div className="flex justify-center space-x-3">
+                      <Button onClick={handleUploadDocument} className="bg-purple-600 hover:bg-purple-700">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Document
+                      </Button>
+                      <Button onClick={onNewDocument} variant="outline" className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white">
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Document
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div>

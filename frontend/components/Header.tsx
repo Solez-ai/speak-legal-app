@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, User, LogOut, Settings, FileText, AlertCircle, Home } from 'lucide-react';
+import { LogIn, User, LogOut, Settings, FileText, AlertCircle, Home, Book } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,9 +10,10 @@ import { useDocuments } from '../hooks/useDocuments';
 
 interface HeaderProps {
   onNavigate?: (page: 'home' | 'dashboard' | 'settings') => void;
+  onShowDictionary?: () => void;
 }
 
-export function Header({ onNavigate }: HeaderProps) {
+export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, signOut, loading } = useAuth();
   const { documents } = useDocuments();

@@ -7,6 +7,7 @@ import { ConfusingClauses } from './components/ConfusingClauses';
 import { SuggestedQuestions } from './components/SuggestedQuestions';
 import { Downloads } from './components/Downloads';
 import { About } from './components/About';
+import { Dictionary } from './components/Dictionary';
 import { Dashboard } from './components/Dashboard';
 import { Settings } from './components/Settings';
 import { DocumentViewer } from './components/DocumentViewer';
@@ -16,7 +17,7 @@ import { useAuth } from './hooks/useAuth';
 import type { AnalyzeDocumentResponse } from '~backend/legal/analyze';
 import type { Document } from './lib/supabase';
 
-export type Tab = 'upload' | 'simplified' | 'clauses' | 'questions' | 'downloads' | 'about';
+export type Tab = 'upload' | 'simplified' | 'clauses' | 'questions' | 'downloads' | 'dictionary' | 'about';
 export type Page = 'home' | 'dashboard' | 'settings' | 'document-viewer';
 
 export interface AppState {
@@ -144,6 +145,7 @@ export default function App() {
               {activeTab === 'clauses' && <ConfusingClauses appState={appState} />}
               {activeTab === 'questions' && <SuggestedQuestions appState={appState} />}
               {activeTab === 'downloads' && <Downloads appState={appState} />}
+              {activeTab === 'dictionary' && <Dictionary />}
               {activeTab === 'about' && <About />}
             </main>
           </>

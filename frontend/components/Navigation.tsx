@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, AlertTriangle, HelpCircle, Download, Info } from 'lucide-react';
+import { FileText, AlertTriangle, HelpCircle, Download, Info, Book } from 'lucide-react';
 import type { Tab } from '../App';
 
 interface NavigationProps {
@@ -13,6 +13,7 @@ const tabs = [
   { id: 'clauses' as Tab, label: 'Confusing Clauses', icon: AlertTriangle },
   { id: 'questions' as Tab, label: 'AI Questions', icon: HelpCircle },
   { id: 'downloads' as Tab, label: 'Downloads', icon: Download },
+  { id: 'dictionary' as Tab, label: 'Legal Dictionary', icon: Book },
   { id: 'about' as Tab, label: 'About', icon: Info },
 ];
 

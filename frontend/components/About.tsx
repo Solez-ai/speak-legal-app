@@ -68,9 +68,9 @@ export function About() {
               <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-white font-bold">1</span>
               </div>
-              <h4 className="font-medium text-white mb-2">Upload Document</h4>
+              <h4 className="font-medium text-white mb-2">Paste Document Text</h4>
               <p className="text-gray-400 text-sm">
-                Upload your PDF, Word document, or paste text directly into the app.
+                Copy and paste your legal document text directly into the analysis area.
               </p>
             </div>
             <div className="text-center">

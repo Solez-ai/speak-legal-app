@@ -31,110 +31,41 @@ export function Upload({ appState, setAppState, onAnalysisComplete, onShowAuth }
 
   const extractTextFromDocx = async (file: File): Promise<string> => {
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+      console.log('📄 Processing DOCX file:', file.name, 'Size:', file.size);
       
-      // Convert to string for processing
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      let content = '';
-      
-      // Try to decode in chunks to handle encoding issues
-      try {
-        content = decoder.decode(uint8Array);
-      } catch (e) {
-        // Fallback: try latin1 encoding
-        const latin1Decoder = new TextDecoder('latin1');
-        content = latin1Decoder.decode(uint8Array);
-      }
-      
-      // Extract text from DOCX XML structure
-      // Look for document.xml content and w:t tags
-      const textMatches = content.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
-      const paragraphMatches = content.match(/<w:p[^>]*>.*?<\/w:p>/gs);
-      
-      let extractedText = '';
-      
-      if (textMatches && textMatches.length > 0) {
-        // Extract text from w:t tags
-        extractedText = textMatches
-          .map(match => {
-            // Remove XML tags and decode entities
-            const text = match.replace(/<w:t[^>]*>([^<]*)<\/w:t>/, '$1');
-            return text
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&amp;/g, '&')
-              .replace(/&quot;/g, '"')
-              .replace(/&apos;/g, "'");
-          })
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-      }
-      
-      // If no text found with w:t tags, try alternative extraction
-      if (!extractedText || extractedText.length < 50) {
-        // Look for any text content between XML tags
-        const allTextMatches = content.match(/>([^<]+)</g);
-        if (allTextMatches) {
-          const candidateText = allTextMatches
-            .map(match => match.replace(/^>([^<]+)<$/, '$1'))
-            .filter(text => text.trim().length > 2 && !/^[0-9\s\-_=]+$/.test(text))
-            .join(' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-          
-          if (candidateText.length > extractedText.length) {
-            extractedText = candidateText;
-          }
-        }
-      }
-      
-      // Final validation
-      if (extractedText && extractedText.length >= 50) {
-        return extractedText;
-      }
-      
-      // If extraction failed, provide helpful instructions
+      // Since DOCX files are binary and require special parsing,
+      // we'll provide clear instructions for manual extraction
       return `[Word Document: ${file.name}]
 
-Unable to automatically extract text from this DOCX file. This can happen with:
-- Password-protected documents
-- Documents with complex formatting
-- Corrupted files
-- Newer DOCX formats
+DOCX files require special processing to extract text properly. To avoid corrupted or unreadable content, please follow these steps:
 
-For best results, please:
-1. Open your document in Microsoft Word or Google Docs
+1. Open your document in Microsoft Word, Google Docs, or any word processor
 2. Select all text (Ctrl+A or Cmd+A)
 3. Copy the text (Ctrl+C or Cmd+C)
 4. Paste it in the text area below
 
-This ensures accurate text extraction for analysis.`;
+This ensures accurate text extraction for analysis and prevents the display of binary data or weird symbols.
+
+Why this happens:
+DOCX files are actually compressed archives containing XML and other files. Reading them as plain text results in unreadable binary content.`;
       
     } catch (error) {
-      console.error('DOCX processing error:', error);
+      console.error('❌ DOCX processing error:', error);
       return `[Word Document: ${file.name}]
 
-Error processing DOCX file: ${error instanceof Error ? error.message : 'Unknown error'}
-
-Please try:
-1. Opening the document in Microsoft Word
-2. Saving it as a .txt file
-3. Uploading the .txt file instead
-
-Or copy and paste the text content directly into the text area below.`;
+Error processing DOCX file. Please copy and paste the text content directly from your word processor.`;
     }
   };
 
   const extractTextFromPdf = async (file: File): Promise<string> => {
     try {
-      // For PDF files, we'll provide instructions since browser-based PDF parsing is complex
+      console.log('📄 Processing PDF file:', file.name);
+      
       return `[PDF Document: ${file.name}]
 
-PDF text extraction requires additional setup. For best results, please:
+PDF text extraction requires manual copy and paste for best results:
 
-1. Open your PDF in a PDF viewer (Adobe Reader, Chrome, etc.)
+1. Open your PDF in a PDF viewer (Adobe Reader, Chrome, Firefox, etc.)
 2. Select all text (Ctrl+A or Cmd+A)
 3. Copy the text (Ctrl+C or Cmd+C)
 4. Paste it in the text area below
@@ -143,7 +74,7 @@ This ensures accurate text extraction for analysis.
 
 Note: Some PDFs (scanned documents, images) may not contain selectable text. In those cases, you may need to use OCR software or manually type the content.`;
     } catch (error) {
-      console.error('PDF processing error:', error);
+      console.error('❌ PDF processing error:', error);
       return `[PDF Document: ${file.name}]
 
 Unable to process PDF. Please copy and paste the text content directly.`;
@@ -161,17 +92,24 @@ Unable to process PDF. Please copy and paste the text content directly.`;
     try {
       let text = '';
       
+      console.log('📁 Processing file:', file.name, 'Type:', file.type, 'Size:', file.size);
+      
       if (file.type === 'application/pdf') {
         text = await extractTextFromPdf(file);
-      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.toLowerCase().endsWith('.docx')) {
+      } else if (
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+        file.name.toLowerCase().endsWith('.docx')
+      ) {
         text = await extractTextFromDocx(file);
       } else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+        console.log('📄 Processing plain text file');
         text = await file.text();
       } else if (file.type.startsWith('text/') || file.name.toLowerCase().match(/\.(txt|md|rtf)$/)) {
-        // Handle other text-based files
+        console.log('📄 Processing text-based file');
         text = await file.text();
       } else {
         // Fallback for unknown file types
+        console.log('❓ Unknown file type, attempting text extraction');
         try {
           text = await file.text();
           if (!text || text.length < 10) {
@@ -183,11 +121,11 @@ Unable to process PDF. Please copy and paste the text content directly.`;
 Unsupported file type: ${file.type || 'unknown'}
 
 Supported formats:
-- PDF files (.pdf)
-- Word documents (.docx)
-- Text files (.txt, .md)
+- PDF files (.pdf) - requires manual copy/paste
+- Word documents (.docx) - requires manual copy/paste
+- Text files (.txt, .md) - automatic extraction
 
-Please convert your document to one of these formats or copy and paste the text directly into the text area below.`;
+Please convert your document to a text file or copy and paste the text directly into the text area below.`;
         }
       }
       
@@ -195,13 +133,15 @@ Please convert your document to one of these formats or copy and paste the text 
       setAppState(prev => ({ ...prev, originalText: text }));
       setAnalysisStatus('');
       
-      // If the extracted text looks like it failed, show a warning
-      if (text.startsWith('[') && text.includes('Unable to')) {
-        setError('Automatic text extraction may have failed. Please review the extracted content and paste the text manually if needed.');
+      // If the extracted text looks like it's instructions, show a helpful message
+      if (text.startsWith('[') && (text.includes('requires manual') || text.includes('copy and paste'))) {
+        setError('Please follow the instructions above to copy and paste your document text manually for best results.');
+      } else if (text.length < 50) {
+        setError('The extracted text is very short. Please verify the content and add more text if needed.');
       }
       
     } catch (error) {
-      console.error('Error processing file:', error);
+      console.error('❌ Error processing file:', error);
       setError(`Error processing ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}. Please try pasting the text directly.`);
       setAnalysisStatus('');
     }
@@ -245,9 +185,15 @@ Please convert your document to one of these formats or copy and paste the text 
       return;
     }
 
-    // Check if the text looks like a failed extraction
-    if (text.startsWith('[') && text.includes('Unable to')) {
-      setError('It looks like the text extraction failed. Please copy and paste your document text manually.');
+    // Check if the text looks like instructions rather than actual document content
+    if (text.startsWith('[') && (text.includes('requires manual') || text.includes('copy and paste'))) {
+      setError('Please copy and paste your actual document text instead of the upload instructions.');
+      return;
+    }
+
+    // Check for binary/corrupted content
+    if (text.includes('PK') && text.length < 200) {
+      setError('The text appears to contain binary data. Please copy and paste the actual document text.');
       return;
     }
 
@@ -285,7 +231,7 @@ Please convert your document to one of these formats or copy and paste the text 
       setAnalysisStatus('');
       onAnalysisComplete();
     } catch (error) {
-      console.error('Analysis failed:', error);
+      console.error('❌ Analysis failed:', error);
       setError(
         error instanceof Error 
           ? `Analysis failed: ${error.message}` 
@@ -460,10 +406,11 @@ Please convert your document to one of these formats or copy and paste the text 
             <div className="text-blue-100 text-sm">
               <p className="font-medium mb-2">📄 File Upload Tips</p>
               <ul className="space-y-1 text-xs">
-                <li>• <strong>PDF files:</strong> For best results, copy and paste text directly from your PDF viewer</li>
-                <li>• <strong>Word files (.docx):</strong> Automatic text extraction is supported, but manual copy-paste is more reliable for complex documents</li>
+                <li>• <strong>PDF files:</strong> Copy and paste text directly from your PDF viewer for best results</li>
+                <li>• <strong>Word files (.docx):</strong> Copy and paste text from Microsoft Word or Google Docs to avoid binary data</li>
                 <li>• <strong>Text files:</strong> Fully supported with automatic processing</li>
                 <li>• <strong>Scanned documents:</strong> May require OCR software or manual typing</li>
+                <li>• <strong>To avoid weird symbols:</strong> Always copy and paste text manually from your document viewer</li>
               </ul>
             </div>
           </CardContent>

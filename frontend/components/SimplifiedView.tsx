@@ -62,8 +62,7 @@ export function SimplifiedView({ appState }: SimplifiedViewProps) {
         </div>
         <Button
           onClick={toggleViewMode}
-          variant="outline"
-          className="border-gray-700 text-gray-300 hover:bg-gray-800"
+          className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
         >
           {viewMode === 'side-by-side' ? (
             <>
@@ -98,7 +97,7 @@ export function SimplifiedView({ appState }: SimplifiedViewProps) {
                       onClick={() => copyToClipboard(section.originalText, 'original', index)}
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-gray-300"
+                      className="text-white bg-gray-800 hover:bg-gray-700"
                     >
                       {copiedStates[`original-${index}`] ? (
                         <CheckCircle className="w-4 h-4 text-green-400" />
@@ -119,7 +118,7 @@ export function SimplifiedView({ appState }: SimplifiedViewProps) {
                       onClick={() => copyToClipboard(section.simplifiedText, 'simplified', index)}
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-gray-300"
+                      className="text-white bg-gray-800 hover:bg-gray-700"
                     >
                       {copiedStates[`simplified-${index}`] ? (
                         <CheckCircle className="w-4 h-4 text-green-400" />

@@ -72,7 +72,7 @@ export function ProtectedRoute({
             <p className="text-gray-400 mb-6">{redirectMessage}</p>
             <Button
               onClick={onShowAuth}
-              className="bg-purple-600 hover:bg-purple-700 w-full"
+              className="bg-purple-600 hover:bg-purple-700 text-white w-full"
             >
               <LogIn className="w-4 h-4 mr-2" />
               Sign In

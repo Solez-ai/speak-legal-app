@@ -142,7 +142,7 @@ Always consult with a qualified attorney for legal advice.
           <div className="flex space-x-3">
             <Button
               onClick={onNewDocument}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Analyze New Document
@@ -215,15 +215,13 @@ Always consult with a qualified attorney for legal advice.
                   />
                 </div>
                 <Button
-                  variant="outline"
-                  size="sm"
                   onClick={() => {
                     const options = ['date', 'title', 'risk'];
                     const currentIndex = options.indexOf(sortBy);
                     const nextIndex = (currentIndex + 1) % options.length;
                     setSortBy(options[nextIndex] as 'date' | 'title' | 'risk');
                   }}
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                  className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
                 >
                   <Filter className="w-4 h-4 mr-2" />
                   Sort by {sortBy === 'date' ? 'Date' : sortBy === 'title' ? 'Title' : 'Risk'}
@@ -244,7 +242,7 @@ Always consult with a qualified attorney for legal advice.
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-white mb-2">No documents yet</h3>
                     <p className="text-gray-400 mb-4">Analyze your first legal document to get started</p>
-                    <Button onClick={onNewDocument} className="bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={onNewDocument} className="bg-purple-600 hover:bg-purple-700 text-white">
                       <Plus className="w-4 h-4 mr-2" />
                       Analyze New Document
                     </Button>
@@ -301,25 +299,22 @@ Always consult with a qualified attorney for legal advice.
                           <div className="flex items-center space-x-2 ml-4">
                             <Button
                               onClick={() => onViewDocument(doc)}
-                              variant="outline"
+                              className="bg-gray-700 text-white hover:bg-gray-600"
                               size="sm"
-                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
                             <Button
                               onClick={() => downloadDocumentReport(doc)}
-                              variant="outline"
+                              className="bg-gray-700 text-white hover:bg-gray-600"
                               size="sm"
-                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
                             >
                               <Download className="w-4 h-4" />
                             </Button>
                             <Button
                               onClick={() => handleDelete(doc.id, doc.title)}
-                              variant="outline"
+                              className="bg-red-600 text-white hover:bg-red-700"
                               size="sm"
-                              className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

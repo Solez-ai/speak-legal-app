@@ -183,8 +183,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <Button
                     onClick={retryConnection}
                     size="sm"
-                    variant="outline"
-                    className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                    className="bg-red-600 text-white hover:bg-red-700"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Retry Connection
@@ -223,7 +222,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     >
                       {loading ? (
                         <>
@@ -237,8 +236,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <Button
                       type="button"
                       onClick={() => setShowForgotPassword(false)}
-                      variant="outline"
-                      className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
+                      className="w-full bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
                     >
                       Back to Sign In
                     </Button>
@@ -294,7 +292,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       >
                         {loading ? (
                           <>
@@ -358,7 +356,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       >
                         {loading ? (
                           <>

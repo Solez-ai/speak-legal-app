@@ -156,7 +156,7 @@ Always consult with a qualified attorney for legal advice.
               <CardContent>
                 <Button
                   onClick={() => downloadFile(option.content, option.filename)}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download {option.title}

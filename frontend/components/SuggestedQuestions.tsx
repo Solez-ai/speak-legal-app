@@ -74,8 +74,7 @@ export function SuggestedQuestions({ appState }: SuggestedQuestionsProps) {
           <Button
             onClick={copySelectedQuestions}
             disabled={selectedQuestions.size === 0 && customQuestions.length === 0}
-            variant="outline"
-            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
           >
             <Copy className="w-4 h-4 mr-2" />
             Copy Selected
@@ -83,7 +82,7 @@ export function SuggestedQuestions({ appState }: SuggestedQuestionsProps) {
           <Button
             onClick={copyAllQuestions}
             disabled={suggestedQuestions.length === 0 && customQuestions.length === 0}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 text-white"
           >
             <Copy className="w-4 h-4 mr-2" />
             Copy All
@@ -151,7 +150,7 @@ export function SuggestedQuestions({ appState }: SuggestedQuestionsProps) {
             <Button
               onClick={addCustomQuestion}
               disabled={!newQuestion.trim()}
-              className="bg-purple-600 hover:bg-purple-700 shrink-0"
+              className="bg-purple-600 hover:bg-purple-700 text-white shrink-0"
             >
               Add
             </Button>

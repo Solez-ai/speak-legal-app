@@ -133,7 +133,7 @@ export function Settings({ onNavigate, onShowAuth }: SettingsProps) {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
                   size="sm"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-purple-600 hover:bg-purple-700"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   {isUploading ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -193,7 +193,7 @@ export function Settings({ onNavigate, onShowAuth }: SettingsProps) {
             <Button
               onClick={handleSaveProfile}
               disabled={isSaving || loading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               {isSaving ? (
                 <>
@@ -253,8 +253,7 @@ export function Settings({ onNavigate, onShowAuth }: SettingsProps) {
               <Button
                 onClick={handleSignOut}
                 disabled={loading}
-                variant="outline"
-                className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                className="bg-gray-700 text-white hover:bg-gray-600"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 {loading ? 'Signing out...' : 'Sign Out'}
@@ -271,8 +270,7 @@ export function Settings({ onNavigate, onShowAuth }: SettingsProps) {
               </div>
               <Button
                 onClick={handleDeleteAccount}
-                variant="outline"
-                className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                className="bg-red-600 text-white hover:bg-red-700"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Account
@@ -284,8 +282,7 @@ export function Settings({ onNavigate, onShowAuth }: SettingsProps) {
         <div className="flex justify-center">
           <Button
             onClick={() => onNavigate('dashboard')}
-            variant="outline"
-            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
           >
             Back to Dashboard
           </Button>

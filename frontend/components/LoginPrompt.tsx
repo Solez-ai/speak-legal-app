@@ -61,14 +61,13 @@ export function LoginPrompt({ isOpen, onClose, onLogin, onContinue }: LoginPromp
           <div className="space-y-3">
             <Button
               onClick={onLogin}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
             >
               Sign In to Save
             </Button>
             <Button
               onClick={onContinue}
-              variant="outline"
-              className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="w-full bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
             >
               Continue Without Saving
             </Button>

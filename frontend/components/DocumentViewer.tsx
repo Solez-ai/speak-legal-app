@@ -98,8 +98,7 @@ Always consult with a qualified attorney for legal advice.
         <div className="flex items-center space-x-4">
           <Button
             onClick={onBack}
-            variant="outline"
-            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
@@ -120,7 +119,7 @@ Always consult with a qualified attorney for legal advice.
         </div>
         <Button
           onClick={downloadDocumentReport}
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-purple-600 hover:bg-purple-700 text-white"
         >
           <Download className="w-4 h-4 mr-2" />
           Download Report

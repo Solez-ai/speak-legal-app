@@ -178,8 +178,7 @@ export function Dictionary({ onBack }: DictionaryProps) {
           {onBack && (
             <Button
               onClick={onBack}
-              variant="outline"
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -226,7 +225,7 @@ export function Dictionary({ onBack }: DictionaryProps) {
                 onClick={clearFilters}
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-gray-300"
+                className="text-white bg-gray-800 hover:bg-gray-700"
               >
                 Clear filters
               </Button>
@@ -247,8 +246,8 @@ export function Dictionary({ onBack }: DictionaryProps) {
                 size="sm"
                 className={
                   selectedLetter === letter
-                    ? "bg-purple-600 hover:bg-purple-700"
-                    : "border-gray-700 text-gray-300 hover:bg-gray-800"
+                    ? "bg-purple-600 hover:bg-purple-700 text-white"
+                    : "bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
                 }
               >
                 {letter}

@@ -139,8 +139,7 @@ export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
               ) : (
                 <Button
                   onClick={() => setShowAuthModal(true)}
-                  variant="outline"
-                  className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white transition-colors"
+                  className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600"
                   disabled={loading}
                 >
                   <LogIn className="w-4 h-4 mr-2" />

@@ -136,7 +136,7 @@ What legal topic would you like to learn about today?`,
           </div>
         )}
 
-        <ScrollArea ref={scrollAreaRef} className="flex-1 px-6">
+        <div ref={scrollAreaRef} className="flex-1 px-6 overflow-y-auto scroll-area">
           <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
@@ -217,7 +217,7 @@ What legal topic would you like to learn about today?`,
             )}
             <div ref={messagesEndRef} />
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="border-t border-gray-800 p-4">
           <div className="flex space-x-2">

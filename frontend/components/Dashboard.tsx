@@ -254,7 +254,7 @@ Always consult with a qualified attorney for legal advice.
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-96 overflow-y-auto scroll-area">
                 {filteredDocuments.map((doc) => {
                   const highRiskCount = doc.confusing_clauses.filter(c => c.riskLevel === 'high').length;
                   const mediumRiskCount = doc.confusing_clauses.filter(c => c.riskLevel === 'medium').length;

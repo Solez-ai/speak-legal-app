@@ -237,7 +237,7 @@ export function Dictionary({ onBack }: DictionaryProps) {
       {/* Alphabet Navigation */}
       <Card className="bg-gray-900 border-gray-800">
         <CardContent className="p-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 overflow-x-auto scroll-area">
             {availableLetters.map((letter) => (
               <Button
                 key={letter}
@@ -269,7 +269,7 @@ export function Dictionary({ onBack }: DictionaryProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-96 overflow-y-auto scroll-area">
           {filteredTerms.map((term) => (
             <Card key={term.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
               <CardHeader className="pb-3">

@@ -106,7 +106,7 @@ export function SimplifiedView({ appState }: SimplifiedViewProps) {
                       )}
                     </Button>
                   </div>
-                  <div className="bg-gray-800 rounded-lg p-4 text-gray-300 text-sm leading-relaxed max-h-96 overflow-y-auto">
+                  <div className="bg-gray-800 rounded-lg p-4 text-gray-300 text-sm leading-relaxed max-h-96 overflow-y-auto scroll-area">
                     {section.originalText}
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export function SimplifiedView({ appState }: SimplifiedViewProps) {
                       )}
                     </Button>
                   </div>
-                  <div className="bg-green-950/30 border border-green-800/30 rounded-lg p-4 text-green-100 text-sm leading-relaxed max-h-96 overflow-y-auto">
+                  <div className="bg-green-950/30 border border-green-800/30 rounded-lg p-4 text-green-100 text-sm leading-relaxed max-h-96 overflow-y-auto scroll-area">
                     {section.simplifiedText}
                   </div>
                 </div>

@@ -20,7 +20,7 @@ const tabs = [
 export function Navigation({ activeTab, onTabChange }: NavigationProps) {
   return (
     <nav className="border-b border-gray-800">
-      <div className="flex space-x-8 overflow-x-auto">
+      <div className="flex space-x-8 overflow-x-auto scroll-area">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

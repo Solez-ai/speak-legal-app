@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Calendar, Search, Filter, Trash2, Download, Eye, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Plus, FileText, Calendar, Search, Filter, Trash2, Download, Eye, AlertTriangle, TrendingUp, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useDocuments } from '../hooks/useDocuments';
 import { useAuth } from '../hooks/useAuth';
+import { Upload as UploadComponent } from './Upload';
 import type { Document } from '../lib/supabase';
+import type { AppState } from '../App';
 
 interface DashboardProps {
   onNewDocument: () => void;
@@ -21,6 +23,12 @@ export function Dashboard({ onNewDocument, onViewDocument, onShowAuth }: Dashboa
   const { documents, loading, deleteDocument } = useDocuments();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'risk'>('date');
+  const [showUpload, setShowUpload] = useState(false);
+  const [appState, setAppState] = useState<AppState>({
+    originalText: '',
+    analysisResult: null,
+    isAnalyzing: false
+  });
 
   const filteredDocuments = documents
     .filter(doc => 
@@ -116,6 +124,15 @@ Always consult with a qualified attorney for legal advice.
     return user?.email?.split('@')[0] || 'User';
   };
 
+  const handleUploadDocument = () => {
+    setShowUpload(true);
+  };
+
+  const handleAnalysisComplete = () => {
+    setShowUpload(false);
+    // Refresh the documents list will happen automatically via useDocuments hook
+  };
+
   // Calculate stats
   const thisMonthDocs = documents.filter(doc => {
     const docDate = new Date(doc.created_at);
@@ -127,6 +144,37 @@ Always consult with a qualified attorney for legal advice.
   const highRiskClauses = documents.reduce((total, doc) => 
     total + doc.confusing_clauses.filter(c => c.riskLevel === 'high').length, 0
   );
+
+  if (showUpload) {
+    return (
+      <ProtectedRoute onShowAuth={onShowAuth}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white">Upload New Document</h1>
+              <p className="text-gray-400 mt-1">
+                Upload and analyze a new legal document
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowUpload(false)}
+              variant="outline"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+
+          <UploadComponent
+            appState={appState}
+            setAppState={setAppState}
+            onAnalysisComplete={handleAnalysisComplete}
+            onShowAuth={onShowAuth}
+          />
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute onShowAuth={onShowAuth}>
@@ -140,13 +188,23 @@ Always consult with a qualified attorney for legal advice.
               Manage your legal documents and analysis results
             </p>
           </div>
-          <Button
-            onClick={onNewDocument}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Document
-          </Button>
+          <div className="flex space-x-3">
+            <Button
+              onClick={handleUploadDocument}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Document
+            </Button>
+            <Button
+              onClick={onNewDocument}
+              variant="outline"
+              className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Document
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -243,8 +301,8 @@ Always consult with a qualified attorney for legal advice.
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-white mb-2">No documents yet</h3>
                     <p className="text-gray-400 mb-4">Upload your first legal document to get started</p>
-                    <Button onClick={onNewDocument} className="bg-purple-600 hover:bg-purple-700">
-                      <Plus className="w-4 h-4 mr-2" />
+                    <Button onClick={handleUploadDocument} className="bg-purple-600 hover:bg-purple-700">
+                      <Upload className="w-4 h-4 mr-2" />
                       Upload Document
                     </Button>
                   </div>

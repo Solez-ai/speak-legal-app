@@ -10,6 +10,7 @@ export function useAuth() {
   const [initializing, setInitializing] = useState(true);
 
   const hasFetchedInitialSession = useRef(false);
+  const hasShownInitialToast = useRef(false);
 
   // ✅ SIGN UP
   const signUp = async (email: string, password: string) => {
@@ -30,7 +31,7 @@ export function useAuth() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      toast.success('Signed in successfully!');
+      // Don't show toast here - let the auth state change handler do it
       return data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to sign in';
@@ -44,7 +45,7 @@ export function useAuth() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      toast.success('Signed out successfully!');
+      // Don't show toast here - let the auth state change handler do it
       setUser(null);
       setSession(null);
     } catch (error) {
@@ -112,6 +113,7 @@ export function useAuth() {
 
           if (accessToken && session?.user && type === 'signup') {
             toast.success('Email confirmed! Welcome to Speak Legal!');
+            hasShownInitialToast.current = true;
           }
         }
       } catch (error) {
@@ -134,26 +136,34 @@ export function useAuth() {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      switch (event) {
-        case 'SIGNED_IN':
-          toast.success('Successfully signed in!');
-          break;
-        case 'SIGNED_OUT':
-          toast.success('Successfully signed out!');
-          break;
-        case 'USER_UPDATED':
-          toast.success('Profile updated!');
-          break;
-        case 'PASSWORD_RECOVERY':
-          toast.success('Password reset email sent!');
-          break;
+      // Only show toasts for actual user actions, not initial loads
+      if (!initializing && !hasShownInitialToast.current) {
+        switch (event) {
+          case 'SIGNED_IN':
+            toast.success('Successfully signed in!');
+            break;
+          case 'SIGNED_OUT':
+            toast.success('Successfully signed out!');
+            break;
+          case 'USER_UPDATED':
+            // Don't show toast for profile updates - handled in updateProfile
+            break;
+          case 'PASSWORD_RECOVERY':
+            // Don't show toast here - handled in resetPassword
+            break;
+        }
+      }
+
+      // Reset the flag after initial load
+      if (hasShownInitialToast.current) {
+        hasShownInitialToast.current = false;
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initializing]);
 
   return {
     user,

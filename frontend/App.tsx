@@ -67,8 +67,11 @@ export default function App() {
   }, [user]);
 
   const handleNavigate = (page: Page) => {
+    console.log('🧭 Navigating to page:', page);
     setCurrentPage(page);
     setSelectedDocument(null);
+    
+    // Always reset to upload tab when going to home
     if (page === 'home') {
       setActiveTab('upload');
       // Reset app state when going to home
@@ -81,11 +84,13 @@ export default function App() {
   };
 
   const handleViewDocument = (document: Document) => {
+    console.log('👁️ Viewing document:', document.title);
     setSelectedDocument(document);
     setCurrentPage('document-viewer');
   };
 
   const handleNewDocument = () => {
+    console.log('📄 Creating new document - navigating to home');
     setCurrentPage('home');
     setActiveTab('upload');
     setAppState({
@@ -96,6 +101,7 @@ export default function App() {
   };
 
   const handleAnalysisComplete = () => {
+    console.log('✅ Analysis complete - switching to simplified view');
     setActiveTab('simplified');
   };
 
@@ -114,6 +120,8 @@ export default function App() {
       </div>
     );
   }
+
+  console.log('🎯 Current page:', currentPage, 'Active tab:', activeTab);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">

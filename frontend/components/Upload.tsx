@@ -21,6 +21,46 @@ export function Upload({ appState, setAppState, onAnalysisComplete }: UploadProp
   const [error, setError] = useState<string | null>(null);
   const [analysisStatus, setAnalysisStatus] = useState<string>('');
 
+  const extractTextFromDocx = async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Simple DOCX text extraction - look for document.xml content
+      const decoder = new TextDecoder('utf-8');
+      const content = decoder.decode(uint8Array);
+      
+      // This is a very basic extraction - in production you'd want a proper DOCX parser
+      const textMatches = content.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
+      if (textMatches) {
+        const extractedText = textMatches
+          .map(match => match.replace(/<w:t[^>]*>([^<]*)<\/w:t>/, '$1'))
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        if (extractedText.length > 50) {
+          return extractedText;
+        }
+      }
+      
+      return `[Word Document: ${file.name}]\n\nUnable to extract text automatically. Please copy and paste the text content of your document here for analysis.`;
+    } catch (error) {
+      console.error('DOCX processing error:', error);
+      return `[Word Document: ${file.name}]\n\nError processing document. Please copy and paste the text content directly.`;
+    }
+  };
+
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    try {
+      // For PDF files, we'll provide instructions since browser-based PDF parsing is complex
+      return `[PDF Document: ${file.name}]\n\nPDF text extraction requires additional setup. For best results, please:\n\n1. Open your PDF in a PDF viewer\n2. Select all text (Ctrl+A or Cmd+A)\n3. Copy the text (Ctrl+C or Cmd+C)\n4. Paste it in the text area below\n\nThis ensures accurate text extraction for analysis.`;
+    } catch (error) {
+      console.error('PDF processing error:', error);
+      return `[PDF Document: ${file.name}]\n\nUnable to process PDF. Please copy and paste the text content directly.`;
+    }
+  };
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
@@ -33,48 +73,13 @@ export function Upload({ appState, setAppState, onAnalysisComplete }: UploadProp
       let text = '';
       
       if (file.type === 'application/pdf') {
-        // For PDF files, provide instructions for manual text extraction
-        text = `[PDF Document: ${file.name}]
-
-PDF text extraction is not available in this version. Please follow these steps:
-
-1. Open your PDF document
-2. Select all text (Ctrl+A or Cmd+A)
-3. Copy the text (Ctrl+C or Cmd+C)
-4. Paste it in the text area below
-
-This ensures the most accurate text extraction for analysis.`;
+        text = await extractTextFromPdf(file);
       } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        // For DOCX files, we'll use mammoth
-        try {
-          const mammoth = await import('mammoth');
-          const arrayBuffer = await file.arrayBuffer();
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          text = result.value;
-          
-          if (!text.trim()) {
-            text = `[Word Document: ${file.name}]
-
-No text content could be extracted automatically. Please:
-
-1. Open your Word document
-2. Select all text (Ctrl+A or Cmd+A)
-3. Copy the text (Ctrl+C or Cmd+C)
-4. Paste it in the text area below`;
-          }
-        } catch (docxError) {
-          console.error('DOCX processing error:', docxError);
-          text = `[Word Document: ${file.name}]
-
-Unable to extract text automatically. Please:
-
-1. Open your Word document
-2. Select all text (Ctrl+A or Cmd+A)
-3. Copy the text (Ctrl+C or Cmd+C)
-4. Paste it in the text area below`;
-        }
+        text = await extractTextFromDocx(file);
+      } else if (file.type === 'text/plain') {
+        text = await file.text();
       } else {
-        // For text files
+        // Fallback for other text-based files
         text = await file.text();
       }
       
@@ -94,6 +99,7 @@ Unable to extract text automatically. Please:
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'text/plain': ['.txt'],
+      'text/*': ['.txt', '.md'],
     },
     multiple: false,
     maxSize: 10 * 1024 * 1024, // 10MB limit
@@ -208,9 +214,6 @@ Unable to extract text automatically. Please:
                   <p className="text-sm text-gray-500">
                     Supports PDF, DOCX, and TXT files (max 10MB)
                   </p>
-                  <p className="text-xs text-gray-600 mt-2">
-                    Note: PDF files require manual text copying for best results
-                  </p>
                 </div>
               )}
             </div>
@@ -294,12 +297,11 @@ Unable to extract text automatically. Please:
       <Card className="bg-blue-950/30 border-blue-800/30">
         <CardContent className="p-4">
           <div className="text-blue-100 text-sm">
-            <p className="font-medium mb-2">💡 Best Results Tips:</p>
+            <p className="font-medium mb-2">📄 File Upload Tips</p>
             <ul className="space-y-1 text-xs">
-              <li>• For PDFs: Copy and paste text manually for most accurate analysis</li>
-              <li>• Include complete clauses and sections for better context</li>
-              <li>• Remove personal information before analysis</li>
-              <li>• Longer documents provide more comprehensive insights</li>
+              <li>• <strong>PDF files:</strong> For best results, copy and paste text directly from your PDF viewer</li>
+              <li>• <strong>Word files:</strong> Basic text extraction is supported, but manual copy-paste is more reliable</li>
+              <li>• <strong>Text files:</strong> Fully supported with automatic processing</li>
             </ul>
           </div>
         </CardContent>

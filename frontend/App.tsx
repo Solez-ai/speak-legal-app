@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Header } from './components/Header';
 import { Upload } from './components/Upload';
 import { SimplifiedView } from './components/SimplifiedView';
@@ -34,20 +35,29 @@ export default function App() {
     analysisResult: null,
     isAnalyzing: false
   });
-  const { user, loading } = useAuth();
+  const { user, loading, initializing } = useAuth();
 
-  // Redirect to dashboard if user is logged in and on home page
+  // Handle navigation based on auth state
   useEffect(() => {
-    if (!loading && user && currentPage === 'home') {
+    if (initializing || loading) return;
+
+    // If user is logged in and on home page, redirect to dashboard
+    if (user && currentPage === 'home' && !appState.analysisResult) {
       setCurrentPage('dashboard');
     }
-  }, [user, loading, currentPage]);
+  }, [user, loading, initializing, currentPage, appState.analysisResult]);
 
   const handleNavigate = (page: Page) => {
     setCurrentPage(page);
     setSelectedDocument(null);
     if (page === 'home') {
       setActiveTab('upload');
+      // Clear analysis state when going home
+      setAppState({
+        originalText: '',
+        analysisResult: null,
+        isAnalyzing: false
+      });
     }
   };
 
@@ -76,12 +86,17 @@ export default function App() {
     }
   };
 
-  if (loading) {
+  const handleShowAuth = () => {
+    setShowAuthModal(true);
+  };
+
+  // Show loading screen during initial auth check
+  if (initializing) {
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-400">Loading Speak Legal...</p>
         </div>
       </div>
     );
@@ -102,7 +117,7 @@ export default function App() {
                   appState={appState} 
                   setAppState={setAppState} 
                   onAnalysisComplete={handleAnalysisComplete}
-                  onShowAuth={() => setShowAuthModal(true)}
+                  onShowAuth={handleShowAuth}
                 />
               )}
               {activeTab === 'simplified' && (
@@ -128,11 +143,15 @@ export default function App() {
           <Dashboard 
             onNewDocument={handleNewDocument}
             onViewDocument={handleViewDocument}
+            onShowAuth={handleShowAuth}
           />
         )}
 
         {currentPage === 'settings' && (
-          <Settings onNavigate={handleNavigate} />
+          <Settings 
+            onNavigate={handleNavigate}
+            onShowAuth={handleShowAuth}
+          />
         )}
 
         {currentPage === 'document-viewer' && selectedDocument && (
@@ -146,6 +165,31 @@ export default function App() {
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
+      />
+
+      {/* Toast notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1f2937',
+            color: '#f3f4f6',
+            border: '1px solid #374151',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#f3f4f6',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#f3f4f6',
+            },
+          },
+        }}
       />
     </div>
   );

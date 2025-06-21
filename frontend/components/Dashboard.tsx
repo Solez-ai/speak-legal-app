@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, FileText, Calendar, Search, Filter, Trash2, Download, Eye } from 'lucide-react';
+import { Plus, FileText, Calendar, Search, Filter, Trash2, Download, Eye, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ProtectedRoute } from './ProtectedRoute';
 import { useDocuments } from '../hooks/useDocuments';
 import { useAuth } from '../hooks/useAuth';
 import type { Document } from '../lib/supabase';
@@ -12,13 +13,14 @@ import type { Document } from '../lib/supabase';
 interface DashboardProps {
   onNewDocument: () => void;
   onViewDocument: (document: Document) => void;
+  onShowAuth: () => void;
 }
 
-export function Dashboard({ onNewDocument, onViewDocument }: DashboardProps) {
+export function Dashboard({ onNewDocument, onViewDocument, onShowAuth }: DashboardProps) {
   const { user } = useAuth();
   const { documents, loading, deleteDocument } = useDocuments();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'risk'>('date');
 
   const filteredDocuments = documents
     .filter(doc => 
@@ -26,10 +28,17 @@ export function Dashboard({ onNewDocument, onViewDocument }: DashboardProps) {
       doc.raw_input.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
-      if (sortBy === 'date') {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'risk':
+          const aHighRisk = a.confusing_clauses.filter(c => c.riskLevel === 'high').length;
+          const bHighRisk = b.confusing_clauses.filter(c => c.riskLevel === 'high').length;
+          return bHighRisk - aHighRisk;
+        case 'date':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
-      return a.title.localeCompare(b.title);
     });
 
   const formatDate = (dateString: string) => {
@@ -44,6 +53,7 @@ export function Dashboard({ onNewDocument, onViewDocument }: DashboardProps) {
     const content = `SPEAK LEGAL - DOCUMENT ANALYSIS
 Title: ${document.title}
 Date: ${formatDate(document.created_at)}
+User: ${user?.email}
 
 ${'='.repeat(60)}
 ORIGINAL DOCUMENT
@@ -95,182 +105,234 @@ Always consult with a qualified attorney for legal advice.
 
   const handleDelete = async (id: string, title: string) => {
     if (confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
-      await deleteDocument(id);
+      await deleteDocument(id, title);
     }
   };
 
+  const getDisplayName = () => {
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    return user?.email?.split('@')[0] || 'User';
+  };
+
+  // Calculate stats
+  const thisMonthDocs = documents.filter(doc => {
+    const docDate = new Date(doc.created_at);
+    const now = new Date();
+    return docDate.getMonth() === now.getMonth() && docDate.getFullYear() === now.getFullYear();
+  }).length;
+
+  const totalClausesFlagged = documents.reduce((total, doc) => total + doc.confusing_clauses.length, 0);
+  const highRiskClauses = documents.reduce((total, doc) => 
+    total + doc.confusing_clauses.filter(c => c.riskLevel === 'high').length, 0
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">
-            Welcome back, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
-          </h1>
-          <p className="text-gray-400 mt-1">
-            Manage your legal documents and analysis results
-          </p>
-        </div>
-        <Button
-          onClick={onNewDocument}
-          className="bg-purple-600 hover:bg-purple-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Document
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gray-900 border-gray-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-white">Total Documents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-400">{documents.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-900 border-gray-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-white">This Month</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-400">
-              {documents.filter(doc => {
-                const docDate = new Date(doc.created_at);
-                const now = new Date();
-                return docDate.getMonth() === now.getMonth() && docDate.getFullYear() === now.getFullYear();
-              }).length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-900 border-gray-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-white">Clauses Flagged</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-400">
-              {documents.reduce((total, doc) => total + doc.confusing_clauses.length, 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-white">My Documents</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search documents..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64 bg-gray-800 border-gray-700 text-white"
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSortBy(sortBy === 'date' ? 'title' : 'date')}
-                className="border-gray-700 text-gray-300 hover:bg-gray-800"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Sort by {sortBy === 'date' ? 'Title' : 'Date'}
-              </Button>
-            </div>
+    <ProtectedRoute onShowAuth={onShowAuth}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">
+              Welcome back, {getDisplayName()}
+            </h1>
+            <p className="text-gray-400 mt-1">
+              Manage your legal documents and analysis results
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-              <p className="text-gray-400 mt-2">Loading documents...</p>
-            </div>
-          ) : filteredDocuments.length === 0 ? (
-            <div className="text-center py-12">
-              {documents.length === 0 ? (
-                <div>
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">No documents yet</h3>
-                  <p className="text-gray-400 mb-4">Upload your first legal document to get started</p>
-                  <Button onClick={onNewDocument} className="bg-purple-600 hover:bg-purple-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Upload Document
-                  </Button>
+          <Button
+            onClick={onNewDocument}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Document
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-white flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-purple-400" />
+                Total Documents
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-400">{documents.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-white flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
+                This Month
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-400">{thisMonthDocs}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-white flex items-center">
+                <AlertTriangle className="w-5 h-5 mr-2 text-yellow-400" />
+                Clauses Flagged
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-yellow-400">{totalClausesFlagged}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-white flex items-center">
+                <AlertTriangle className="w-5 h-5 mr-2 text-red-400" />
+                High Risk
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-400">{highRiskClauses}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="bg-gray-900 border-gray-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white">My Documents</CardTitle>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search documents..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64 bg-gray-800 border-gray-700 text-white"
+                  />
                 </div>
-              ) : (
-                <div>
-                  <p className="text-gray-400">No documents match your search</p>
-                </div>
-              )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const options = ['date', 'title', 'risk'];
+                    const currentIndex = options.indexOf(sortBy);
+                    const nextIndex = (currentIndex + 1) % options.length;
+                    setSortBy(options[nextIndex] as 'date' | 'title' | 'risk');
+                  }}
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Sort by {sortBy === 'date' ? 'Date' : sortBy === 'title' ? 'Title' : 'Risk'}
+                </Button>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredDocuments.map((document) => (
-                <Card key={document.id} className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold text-white">{document.title}</h3>
-                          <div className="flex space-x-2">
-                            {document.confusing_clauses.length > 0 && (
-                              <Badge variant="outline" className="border-yellow-500 text-yellow-400 text-xs">
-                                {document.confusing_clauses.length} Clause{document.confusing_clauses.length !== 1 ? 's' : ''} Flagged
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className="border-blue-500 text-blue-400 text-xs">
-                              {document.simplified_sections.length} Section{document.simplified_sections.length !== 1 ? 's' : ''}
-                            </Badge>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                <p className="text-gray-400 mt-2">Loading documents...</p>
+              </div>
+            ) : filteredDocuments.length === 0 ? (
+              <div className="text-center py-12">
+                {documents.length === 0 ? (
+                  <div>
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-white mb-2">No documents yet</h3>
+                    <p className="text-gray-400 mb-4">Upload your first legal document to get started</p>
+                    <Button onClick={onNewDocument} className="bg-purple-600 hover:bg-purple-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Upload Document
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-gray-400">No documents match your search</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredDocuments.map((document) => {
+                  const highRiskCount = document.confusing_clauses.filter(c => c.riskLevel === 'high').length;
+                  const mediumRiskCount = document.confusing_clauses.filter(c => c.riskLevel === 'medium').length;
+                  
+                  return (
+                    <Card key={document.id} className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="font-semibold text-white">{document.title}</h3>
+                              <div className="flex space-x-2">
+                                {highRiskCount > 0 && (
+                                  <Badge variant="outline" className="border-red-500 text-red-400 text-xs">
+                                    {highRiskCount} High Risk
+                                  </Badge>
+                                )}
+                                {mediumRiskCount > 0 && (
+                                  <Badge variant="outline" className="border-yellow-500 text-yellow-400 text-xs">
+                                    {mediumRiskCount} Medium Risk
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="border-blue-500 text-blue-400 text-xs">
+                                  {document.simplified_sections.length} Section{document.simplified_sections.length !== 1 ? 's' : ''}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-4 text-sm text-gray-400">
+                              <div className="flex items-center space-x-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>{formatDate(document.created_at)}</span>
+                              </div>
+                              <span>{document.raw_input.length} characters</span>
+                              {document.suggested_questions.length > 0 && (
+                                <span>{document.suggested_questions.length} questions</span>
+                              )}
+                            </div>
+                            <p className="text-gray-300 text-sm mt-2 line-clamp-2">
+                              {document.raw_input.substring(0, 150)}...
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2 ml-4">
+                            <Button
+                              onClick={() => onViewDocument(document)}
+                              variant="outline"
+                              size="sm"
+                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => downloadDocument(document)}
+                              variant="outline"
+                              size="sm"
+                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(document.id, document.title)}
+                              variant="outline"
+                              size="sm"
+                              className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatDate(document.created_at)}</span>
-                          </div>
-                          <span>{document.raw_input.length} characters</span>
-                        </div>
-                        <p className="text-gray-300 text-sm mt-2 line-clamp-2">
-                          {document.raw_input.substring(0, 150)}...
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2 ml-4">
-                        <Button
-                          onClick={() => onViewDocument(document)}
-                          variant="outline"
-                          size="sm"
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => downloadDocument(document)}
-                          variant="outline"
-                          size="sm"
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDelete(document.id, document.title)}
-                          variant="outline"
-                          size="sm"
-                          className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
   );
 }

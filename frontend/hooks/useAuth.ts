@@ -95,7 +95,78 @@ export function useAuth() {
     };
   }, []);
 
-  // ... signUp, signIn, signOut, resetPassword, updateProfile unchanged ...
+  // SIGN UP
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      toast.success('Signup successful! Please check your email to confirm.');
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to sign up';
+      toast.error(message);
+      throw error;
+    }
+  };
+
+  // SIGN IN
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success('Signed in successfully!');
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to sign in';
+      toast.error(message);
+      throw error;
+    }
+  };
+
+  // SIGN OUT
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success('Signed out successfully!');
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to sign out';
+      toast.error(message);
+    }
+  };
+
+  // RESET PASSWORD
+  const resetPassword = async (email: string) => {
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) throw error;
+      toast.success('Password reset email sent!');
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send reset email';
+      toast.error(message);
+      throw error;
+    }
+  };
+
+  // UPDATE PROFILE
+  const updateProfile = async (updates: { email?: string; password?: string; [key: string]: any }) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser(updates);
+      if (error) throw error;
+      toast.success('Profile updated!');
+      setUser(data.user);
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update profile';
+      toast.error(message);
+      throw error;
+    }
+  };
 
   return {
     user,

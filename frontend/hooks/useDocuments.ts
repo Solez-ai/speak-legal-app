@@ -46,10 +46,8 @@ export function useDocuments() {
         confusingClauses,
         suggestedQuestions
       );
-      
+
       toast.success('Document saved successfully!');
-      
-      // Refresh documents list
       await fetchDocuments();
       return document;
     } catch (error) {
@@ -64,8 +62,6 @@ export function useDocuments() {
     try {
       await deleteDocumentFromSupabase(id);
       toast.success(`"${title}" deleted successfully`);
-      
-      // Refresh documents list
       await fetchDocuments();
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -74,19 +70,18 @@ export function useDocuments() {
     }
   };
 
-  // Real-time subscription to documents changes
   useEffect(() => {
     if (!user) {
       setDocuments([]);
       return;
     }
 
-    // Initial fetch
     fetchDocuments();
 
-    // Set up real-time subscription
+    const channelName = `documents_changes_${user.id}`;
+
     const subscription = supabase
-      .channel('documents_changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -97,7 +92,6 @@ export function useDocuments() {
         },
         (payload) => {
           console.log('Document change detected:', payload);
-          // Refresh documents when changes occur
           fetchDocuments();
         }
       )

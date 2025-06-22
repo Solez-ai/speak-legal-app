@@ -21,26 +21,36 @@ export function ProtectedRoute({
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
+    console.log('🔒 ProtectedRoute - Auth state:', { 
+      user: user?.email || 'No user', 
+      loading, 
+      initializing 
+    });
+
     // Wait for auth to initialize
     if (initializing || loading) {
+      console.log('🔄 ProtectedRoute - Still loading auth...');
       return;
     }
 
     // If no user after initialization, show fallback
     if (!user) {
+      console.log('❌ ProtectedRoute - No user found, showing fallback');
       setShowFallback(true);
     } else {
+      console.log('✅ ProtectedRoute - User authenticated, showing content');
       setShowFallback(false);
     }
   }, [user, loading, initializing]);
 
   // Show loading state while initializing
   if (initializing || loading) {
+    console.log('🔄 ProtectedRoute - Rendering loading state');
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-400">Checking authentication...</p>
         </div>
       </div>
     );
@@ -48,6 +58,7 @@ export function ProtectedRoute({
 
   // Show fallback if not authenticated
   if (showFallback) {
+    console.log('🚫 ProtectedRoute - Rendering auth required fallback');
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -73,5 +84,6 @@ export function ProtectedRoute({
   }
 
   // User is authenticated, render children
+  console.log('✅ ProtectedRoute - Rendering protected content');
   return <>{children}</>;
 }

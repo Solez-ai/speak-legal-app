@@ -39,16 +39,28 @@ export default function App() {
 
   // Handle URL fragments and navigation based on auth state
   useEffect(() => {
-    if (initializing || loading) return;
+    console.log('🔄 App - Auth state changed:', { 
+      user: user?.email || 'No user', 
+      loading, 
+      initializing, 
+      currentPage 
+    });
+
+    if (initializing || loading) {
+      console.log('🔄 App - Still loading auth, waiting...');
+      return;
+    }
 
     // Check for auth fragments in URL (from email confirmation)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     const type = hashParams.get('type');
     
+    console.log('🔍 App - URL fragments:', { accessToken: !!accessToken, type });
+    
     // If we have auth tokens and user is now logged in, redirect to dashboard
     if (accessToken && user && type === 'signup') {
-      console.log('🔄 Email confirmed, redirecting to dashboard');
+      console.log('🔄 App - Email confirmed, redirecting to dashboard');
       setCurrentPage('dashboard');
       // Clean up URL
       window.history.replaceState(null, '', window.location.pathname);
@@ -57,6 +69,7 @@ export default function App() {
 
     // If user is logged in and on home page without analysis, redirect to dashboard
     if (user && currentPage === 'home' && !appState.analysisResult) {
+      console.log('🔄 App - User logged in, redirecting to dashboard');
       setCurrentPage('dashboard');
     }
   }, [user, loading, initializing, currentPage, appState.analysisResult]);
@@ -64,11 +77,13 @@ export default function App() {
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
+      console.log('🔄 App - Browser navigation detected');
       // Check URL fragments for auth state
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       
       if (accessToken && user) {
+        console.log('🔄 App - Auth tokens in URL, redirecting to dashboard');
         // User just confirmed email, go to dashboard
         setCurrentPage('dashboard');
         window.history.replaceState(null, '', window.location.pathname);
@@ -80,6 +95,7 @@ export default function App() {
   }, [user]);
 
   const handleNavigate = (page: Page) => {
+    console.log('🔄 App - Navigating to:', page);
     setCurrentPage(page);
     setSelectedDocument(null);
     if (page === 'home') {
@@ -94,11 +110,13 @@ export default function App() {
   };
 
   const handleViewDocument = (document: Document) => {
+    console.log('📄 App - Viewing document:', document.title);
     setSelectedDocument(document);
     setCurrentPage('document-viewer');
   };
 
   const handleNewDocument = () => {
+    console.log('📄 App - Creating new document');
     setCurrentPage('home');
     setActiveTab('upload');
     setAppState({
@@ -109,6 +127,7 @@ export default function App() {
   };
 
   const handleAnalysisComplete = () => {
+    console.log('✅ App - Analysis complete, user:', user?.email || 'No user');
     if (user) {
       // If user is logged in, go to dashboard
       setCurrentPage('dashboard');
@@ -119,11 +138,13 @@ export default function App() {
   };
 
   const handleShowAuth = () => {
+    console.log('🔐 App - Showing auth modal');
     setShowAuthModal(true);
   };
 
   // Show loading screen during initial auth check
   if (initializing) {
+    console.log('🔄 App - Rendering initialization loading screen');
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center">
         <div className="text-center">
@@ -133,6 +154,8 @@ export default function App() {
       </div>
     );
   }
+
+  console.log('🎨 App - Rendering main app, current page:', currentPage);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">

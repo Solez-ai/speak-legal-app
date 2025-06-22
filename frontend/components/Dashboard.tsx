@@ -49,23 +49,23 @@ export function Dashboard({ onNewDocument, onViewDocument, onShowAuth }: Dashboa
     });
   };
 
-  const downloadDocument = (document: Document) => {
+  const downloadDocumentReport = (doc: Document) => {
     const content = `SPEAK LEGAL - DOCUMENT ANALYSIS
-Title: ${document.title}
-Date: ${formatDate(document.created_at)}
+Title: ${doc.title}
+Date: ${formatDate(doc.created_at)}
 User: ${user?.email}
 
 ${'='.repeat(60)}
 ORIGINAL DOCUMENT
 ${'='.repeat(60)}
 
-${document.raw_input}
+${doc.raw_input}
 
 ${'='.repeat(60)}
 SIMPLIFIED SECTIONS
 ${'='.repeat(60)}
 
-${document.simplified_sections.map((section, index) => 
+${doc.simplified_sections.map((section, index) => 
   `SECTION ${index + 1}\n\nOriginal:\n${section.originalText}\n\nSimplified:\n${section.simplifiedText}\n\n${'='.repeat(50)}\n\n`
 ).join('')}
 
@@ -73,8 +73,8 @@ ${'='.repeat(60)}
 CONFUSING CLAUSES
 ${'='.repeat(60)}
 
-${document.confusing_clauses.length === 0 ? 'No confusing clauses identified.' : 
-  document.confusing_clauses.map((clause, index) => 
+${doc.confusing_clauses.length === 0 ? 'No confusing clauses identified.' : 
+  doc.confusing_clauses.map((clause, index) => 
     `CLAUSE ${index + 1} (${clause.riskLevel.toUpperCase()} RISK)\n\nClause:\n${clause.clause}\n\nWhy confusing:\n${clause.whyConfusing}\n\n${clause.suggestedRewrite ? `Suggested rewrite:\n${clause.suggestedRewrite}\n\n` : ''}${'='.repeat(50)}\n\n`
   ).join('')}
 
@@ -82,8 +82,8 @@ ${'='.repeat(60)}
 SUGGESTED QUESTIONS
 ${'='.repeat(60)}
 
-${document.suggested_questions.length === 0 ? 'No specific questions generated.' :
-  document.suggested_questions.map((question, index) => 
+${doc.suggested_questions.length === 0 ? 'No specific questions generated.' :
+  doc.suggested_questions.map((question, index) => 
     `${index + 1}. ${question.question}\n   Context: ${question.context}\n   Related to: ${question.relatedClause.substring(0, 100)}...\n\n`
   ).join('')}
 
@@ -94,12 +94,12 @@ Always consult with a qualified attorney for legal advice.
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${document.title.replace(/[^a-z0-9]/gi, '_')}_analysis.txt`;
-    document.body.appendChild(a);
+    a.download = `${doc.title.replace(/[^a-z0-9]/gi, '_')}_analysis.txt`;
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
@@ -256,17 +256,17 @@ Always consult with a qualified attorney for legal advice.
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredDocuments.map((document) => {
-                  const highRiskCount = document.confusing_clauses.filter(c => c.riskLevel === 'high').length;
-                  const mediumRiskCount = document.confusing_clauses.filter(c => c.riskLevel === 'medium').length;
+                {filteredDocuments.map((doc) => {
+                  const highRiskCount = doc.confusing_clauses.filter(c => c.riskLevel === 'high').length;
+                  const mediumRiskCount = doc.confusing_clauses.filter(c => c.riskLevel === 'medium').length;
                   
                   return (
-                    <Card key={document.id} className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors">
+                    <Card key={doc.id} className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="font-semibold text-white">{document.title}</h3>
+                              <h3 className="font-semibold text-white">{doc.title}</h3>
                               <div className="flex space-x-2">
                                 {highRiskCount > 0 && (
                                   <Badge variant="outline" className="border-red-500 text-red-400 text-xs">
@@ -279,27 +279,27 @@ Always consult with a qualified attorney for legal advice.
                                   </Badge>
                                 )}
                                 <Badge variant="outline" className="border-blue-500 text-blue-400 text-xs">
-                                  {document.simplified_sections.length} Section{document.simplified_sections.length !== 1 ? 's' : ''}
+                                  {doc.simplified_sections.length} Section{doc.simplified_sections.length !== 1 ? 's' : ''}
                                 </Badge>
                               </div>
                             </div>
                             <div className="flex items-center space-x-4 text-sm text-gray-400">
                               <div className="flex items-center space-x-1">
                                 <Calendar className="w-4 h-4" />
-                                <span>{formatDate(document.created_at)}</span>
+                                <span>{formatDate(doc.created_at)}</span>
                               </div>
-                              <span>{document.raw_input.length} characters</span>
-                              {document.suggested_questions.length > 0 && (
-                                <span>{document.suggested_questions.length} questions</span>
+                              <span>{doc.raw_input.length} characters</span>
+                              {doc.suggested_questions.length > 0 && (
+                                <span>{doc.suggested_questions.length} questions</span>
                               )}
                             </div>
                             <p className="text-gray-300 text-sm mt-2 line-clamp-2">
-                              {document.raw_input.substring(0, 150)}...
+                              {doc.raw_input.substring(0, 150)}...
                             </p>
                           </div>
                           <div className="flex items-center space-x-2 ml-4">
                             <Button
-                              onClick={() => onViewDocument(document)}
+                              onClick={() => onViewDocument(doc)}
                               variant="outline"
                               size="sm"
                               className="border-gray-600 text-gray-300 hover:bg-gray-700"
@@ -307,7 +307,7 @@ Always consult with a qualified attorney for legal advice.
                               <Eye className="w-4 h-4" />
                             </Button>
                             <Button
-                              onClick={() => downloadDocument(document)}
+                              onClick={() => downloadDocumentReport(doc)}
                               variant="outline"
                               size="sm"
                               className="border-gray-600 text-gray-300 hover:bg-gray-700"
@@ -315,7 +315,7 @@ Always consult with a qualified attorney for legal advice.
                               <Download className="w-4 h-4" />
                             </Button>
                             <Button
-                              onClick={() => handleDelete(document.id, document.title)}
+                              onClick={() => handleDelete(doc.id, doc.title)}
                               variant="outline"
                               size="sm"
                               className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"

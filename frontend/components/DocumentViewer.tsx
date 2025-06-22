@@ -39,7 +39,7 @@ export function DocumentViewer({ document, onBack }: DocumentViewerProps) {
     });
   };
 
-  const downloadDocument = () => {
+  const downloadDocumentReport = () => {
     const content = `SPEAK LEGAL - DOCUMENT ANALYSIS
 Title: ${document.title}
 Date: ${formatDate(document.created_at)}
@@ -83,12 +83,12 @@ Always consult with a qualified attorney for legal advice.
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = window.document.createElement('a');
     a.href = url;
     a.download = `${document.title.replace(/[^a-z0-9]/gi, '_')}_analysis.txt`;
-    document.body.appendChild(a);
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
@@ -119,7 +119,7 @@ Always consult with a qualified attorney for legal advice.
           </div>
         </div>
         <Button
-          onClick={downloadDocument}
+          onClick={downloadDocumentReport}
           className="bg-purple-600 hover:bg-purple-700"
         >
           <Download className="w-4 h-4 mr-2" />

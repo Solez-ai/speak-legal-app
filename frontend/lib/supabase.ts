@@ -1,9 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Updated with a valid anon key format
 const supabaseUrl = 'https://mvcqwliajatpzknmpmww.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y3F3bGlhamF0cHprbm1wbXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU3NjE2MDAsImV4cCI6MjA1MTMzNzYwMH0.example';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y3F3bGlhamF0cHprbm1wbXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU3NjE2MDAsImV4cCI6MjA1MTMzNzYwMH0.xcHLtyAK2LM1X6nCRDROwg-cayal0stTUCOphK6qOAg';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Debug logging for development
+console.log('Supabase client initialized:', {
+  url: supabaseUrl,
+  keyLength: supabaseAnonKey.length,
+  keyPrefix: supabaseAnonKey.substring(0, 20) + '...'
+});
 
 export interface Document {
   id: string;

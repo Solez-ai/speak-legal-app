@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,6 +21,26 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState('login');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn, signUp, resetPassword, loading } = useAuth();
+
+  // Debug Supabase connection when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('AuthModal opened - checking Supabase connection...');
+      console.log('Supabase client:', supabase);
+      
+      // Test connection
+      supabase.auth.getSession().then(({ data, error }) => {
+        if (error) {
+          console.error('Supabase connection test failed:', error);
+          if (error.message.includes('Invalid API key')) {
+            setError('Authentication service is misconfigured. Please check the API key.');
+          }
+        } else {
+          console.log('Supabase connection test successful');
+        }
+      });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -37,6 +58,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       return;
     }
 
+    console.log(`Attempting ${isSignUp ? 'sign up' : 'sign in'} for:`, email);
+
     try {
       const { error } = isSignUp 
         ? await signUp(email, password)
@@ -53,6 +76,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       }
     } catch (err) {
+      console.error('Auth error:', err);
       setError('An unexpected error occurred');
     }
   };
@@ -301,6 +325,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               >
                 Continue without account
               </button>
+            </div>
+          )}
+
+          {/* Debug info in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-2 bg-gray-800 rounded text-xs text-gray-400">
+              <div>Debug: Supabase client loaded</div>
+              <div>URL: {supabase.supabaseUrl}</div>
+              <div>Key: {supabase.supabaseKey?.substring(0, 20)}...</div>
             </div>
           )}
         </CardContent>

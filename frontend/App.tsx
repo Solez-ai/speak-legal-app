@@ -38,6 +38,7 @@ export default function App() {
   const { user, loading, initializing } = useAuth();
 
   useEffect(() => {
+    // Only run if auth finished loading
     if (initializing || loading) return;
 
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -109,7 +110,8 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  if (initializing) {
+  // Show loading screen while auth is loading or initializing to avoid white blank screen
+  if (initializing || loading) {
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center">
         <div className="text-center">

@@ -1,112 +1,76 @@
 import { useState, useEffect } from 'react';
-import { supabase, Document, saveDocument as saveDocumentToSupabase, fetchMyDocuments, deleteDocument as deleteDocumentFromSupabase } from '../lib/supabase';
-import { useAuth } from './useAuth';
+import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
+import type { Document } from '../lib/supabase';
+import { useAuth } from './useAuth';
+
+let subscribed = false; // ✅ Global flag to prevent multiple subscriptions
 
 export function useDocuments() {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchDocuments = async () => {
-    if (!user) {
-      setDocuments([]);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const docs = await fetchMyDocuments();
-      setDocuments(docs);
-      console.log('✅ Fetched documents:', docs.length);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      toast.error('Failed to load documents');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveDocument = async (
-    title: string,
-    rawInput: string,
-    simplifiedSections: any[],
-    confusingClauses: any[],
-    suggestedQuestions: any[]
-  ) => {
-    if (!user) {
-      toast.error('You must be logged in to save documents');
-      return null;
-    }
-
-    try {
-      const document = await saveDocumentToSupabase(
-        title,
-        rawInput,
-        simplifiedSections,
-        confusingClauses,
-        suggestedQuestions
-      );
-      
-      toast.success('Document saved successfully!');
-      await fetchDocuments();
-      return document;
-    } catch (error) {
-      console.error('Error saving document:', error);
-      const message = error instanceof Error ? error.message : 'Failed to save document';
-      toast.error(message);
-      return null;
-    }
-  };
-
-  const deleteDocument = async (id: string, title: string) => {
-    try {
-      await deleteDocumentFromSupabase(id);
-      toast.success(`"${title}" deleted successfully`);
-      await fetchDocuments();
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      const message = error instanceof Error ? error.message : 'Failed to delete document';
-      toast.error(message);
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      setDocuments([]);
-      return;
-    }
+    if (!user) return;
+
+    const fetchDocuments = async () => {
+      try {
+        console.log('📄 Fetching user documents...');
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        console.log('✅ Fetched documents:', data.length);
+        setDocuments(data as Document[]);
+      } catch (error) {
+        toast.error('Failed to fetch documents');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchDocuments();
 
-    const channel = supabase
-      .channel(`documents_changes_user_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'documents',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Document change detected:', payload);
+    if (!subscribed) {
+      subscribed = true;
+      supabase
+        .channel('documents')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, (payload) => {
+          console.log('📦 Realtime change:', payload);
+
+          // Re-fetch on update/delete/insert
           fetchDocuments();
-        }
-      );
-
-    channel.subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
+        })
+        .subscribe();
+    }
   }, [user]);
+
+  const deleteDocument = async (id: string, title: string) => {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(`Deleted: ${title}`);
+      setDocuments(prev => prev.filter(doc => doc.id !== id));
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete document');
+    }
+  };
 
   return {
     documents,
     loading,
-    fetchDocuments,
-    saveDocument,
-    deleteDocument,
+    deleteDocument
   };
 }

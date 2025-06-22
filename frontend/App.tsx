@@ -37,15 +37,47 @@ export default function App() {
   });
   const { user, loading, initializing } = useAuth();
 
-  // Handle navigation based on auth state
+  // Handle URL fragments and navigation based on auth state
   useEffect(() => {
     if (initializing || loading) return;
 
-    // If user is logged in and on home page, redirect to dashboard
+    // Check for auth fragments in URL (from email confirmation)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+    
+    // If we have auth tokens and user is now logged in, redirect to dashboard
+    if (accessToken && user && type === 'signup') {
+      console.log('🔄 Email confirmed, redirecting to dashboard');
+      setCurrentPage('dashboard');
+      // Clean up URL
+      window.history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+
+    // If user is logged in and on home page without analysis, redirect to dashboard
     if (user && currentPage === 'home' && !appState.analysisResult) {
       setCurrentPage('dashboard');
     }
   }, [user, loading, initializing, currentPage, appState.analysisResult]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // Check URL fragments for auth state
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      
+      if (accessToken && user) {
+        // User just confirmed email, go to dashboard
+        setCurrentPage('dashboard');
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user]);
 
   const handleNavigate = (page: Page) => {
     setCurrentPage(page);

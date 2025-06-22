@@ -10,10 +10,23 @@ export function useAuth() {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session and handle URL fragments
     const getInitialSession = async () => {
       try {
         console.log('🔄 Getting initial session...');
+        console.log('Current URL:', window.location.href);
+        
+        // Check if we have auth fragments in the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken) {
+          console.log('🔍 Found auth tokens in URL fragment, processing...');
+          // Clear the URL hash to clean up the URL
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -35,6 +48,12 @@ export function useAuth() {
           console.log('✅ Initial session retrieved:', session?.user?.email || 'No session');
           setSession(session);
           setUser(session?.user ?? null);
+          
+          // If we just confirmed email and have a session, show success message
+          if (accessToken && session?.user) {
+            console.log('✅ Email confirmed and user logged in');
+            toast.success('Email confirmed! Welcome to Speak Legal!');
+          }
         }
       } catch (error) {
         console.error('❌ Error in getInitialSession:', error);
@@ -95,7 +114,7 @@ export function useAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}`,
         },
       });
 

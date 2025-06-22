@@ -18,6 +18,7 @@ export function useDocuments() {
     try {
       const docs = await fetchMyDocuments();
       setDocuments(docs);
+      console.log('✅ Fetched documents:', docs.length);
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast.error('Failed to load documents');
@@ -46,7 +47,7 @@ export function useDocuments() {
         confusingClauses,
         suggestedQuestions
       );
-
+      
       toast.success('Document saved successfully!');
       await fetchDocuments();
       return document;
@@ -78,10 +79,8 @@ export function useDocuments() {
 
     fetchDocuments();
 
-    const channelName = `documents_changes_${user.id}`;
-
-    const subscription = supabase
-      .channel(channelName)
+    const channel = supabase
+      .channel(`documents_changes_user_${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -94,11 +93,12 @@ export function useDocuments() {
           console.log('Document change detected:', payload);
           fetchDocuments();
         }
-      )
-      .subscribe();
+      );
+
+    channel.subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, [user]);
 

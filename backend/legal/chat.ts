@@ -23,6 +23,11 @@ export const chat = api<ChatRequest, ChatResponse>(
       throw APIError.invalidArgument("Message is too long. Please keep it under 2000 characters.");
     }
 
+    const userMessage = req.message.trim();
+    
+    // Analyze user message to determine desired response length
+    const responseStyle = analyzeUserIntent(userMessage);
+
     const systemPrompt = `You are Kovex AI, a legal information assistant. Follow these rules strictly:
 
 **Professional Tone**: Always respond in a polite, clear, and professional manner appropriate for legal discussions.
@@ -53,11 +58,11 @@ export const chat = api<ChatRequest, ChatResponse>(
 
 **Encourage Verification**: Always encourage users to verify any legal information with official sources or a licensed attorney.
 
+**RESPONSE LENGTH ADAPTATION**: ${getResponseLengthGuidance(responseStyle)}
+
 Format your responses using markdown for better readability. Use **bold** for important terms, *italics* for emphasis, and bullet points for lists when appropriate.
 
 Always end responses with a reminder about consulting qualified legal professionals for specific legal matters.`;
-
-    const userMessage = req.message.trim();
 
     try {
       const response = await callOpenRouter([
@@ -74,6 +79,86 @@ Always end responses with a reminder about consulting qualified legal profession
     }
   }
 );
+
+function analyzeUserIntent(message: string): 'brief' | 'detailed' | 'moderate' {
+  const lowerMessage = message.toLowerCase();
+  
+  // Indicators for brief responses
+  const briefIndicators = [
+    'what is', 'define', 'definition', 'meaning of', 'simply', 'briefly', 'quick',
+    'short', 'in simple terms', 'tldr', 'summary', 'just tell me', 'what does',
+    'yes or no', 'true or false', 'is it', 'can you', 'does it'
+  ];
+  
+  // Indicators for detailed responses
+  const detailedIndicators = [
+    'explain', 'how does', 'why', 'process', 'procedure', 'steps', 'detailed',
+    'comprehensive', 'thorough', 'in depth', 'elaborate', 'describe',
+    'walk me through', 'tell me about', 'help me understand', 'examples',
+    'what are the implications', 'what should i know', 'everything about'
+  ];
+  
+  // Check for brief indicators
+  const hasBriefIndicators = briefIndicators.some(indicator => 
+    lowerMessage.includes(indicator)
+  );
+  
+  // Check for detailed indicators
+  const hasDetailedIndicators = detailedIndicators.some(indicator => 
+    lowerMessage.includes(indicator)
+  );
+  
+  // Message length analysis
+  const wordCount = message.split(/\s+/).length;
+  const hasQuestionWords = /\b(how|why|what|when|where|which|explain|describe)\b/i.test(message);
+  
+  // Decision logic
+  if (hasBriefIndicators && !hasDetailedIndicators) {
+    return 'brief';
+  }
+  
+  if (hasDetailedIndicators || (wordCount > 15 && hasQuestionWords)) {
+    return 'detailed';
+  }
+  
+  if (wordCount <= 5 || message.endsWith('?') && wordCount <= 10) {
+    return 'brief';
+  }
+  
+  return 'moderate';
+}
+
+function getResponseLengthGuidance(style: 'brief' | 'detailed' | 'moderate'): string {
+  switch (style) {
+    case 'brief':
+      return `The user appears to want a SHORT, CONCISE answer. Keep your response:
+- 1-3 sentences maximum for simple definitions
+- Direct and to the point
+- Focus only on the essential information
+- Avoid lengthy explanations unless absolutely necessary
+- Use simple, clear language
+- Still include the legal disclaimer but keep it brief`;
+      
+    case 'detailed':
+      return `The user appears to want a COMPREHENSIVE, DETAILED explanation. Provide:
+- Thorough explanations with context
+- Multiple paragraphs if needed
+- Examples where helpful
+- Background information
+- Step-by-step processes if applicable
+- Implications and considerations
+- More comprehensive legal disclaimers`;
+      
+    case 'moderate':
+    default:
+      return `The user appears to want a BALANCED response. Provide:
+- 2-4 sentences for definitions
+- Brief explanation with some context
+- Key points without overwhelming detail
+- Standard legal disclaimers
+- Clear but not overly lengthy responses`;
+  }
+}
 
 async function callOpenRouter(messages: Array<{role: string; content: string}>): Promise<string> {
   const controller = new AbortController();

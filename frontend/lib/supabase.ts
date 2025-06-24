@@ -102,21 +102,37 @@ export async function saveDocument(
 
   console.log('✅ User authenticated:', user.email);
 
+  const documentData = {
+    user_id: user.id,
+    title,
+    raw_input: rawInput,
+    simplified_sections: simplifiedSections,
+    confusing_clauses: confusingClauses,
+    suggested_questions: suggestedQuestions,
+  };
+
+  console.log('📝 Inserting document data:', {
+    ...documentData,
+    raw_input: `${rawInput.substring(0, 100)}...`,
+    simplified_sections: `${simplifiedSections.length} sections`,
+    confusing_clauses: `${confusingClauses.length} clauses`,
+    suggested_questions: `${suggestedQuestions.length} questions`
+  });
+
   const { data, error } = await supabase
     .from('documents')
-    .insert({
-      user_id: user.id,
-      title,
-      raw_input: rawInput,
-      simplified_sections: simplifiedSections,
-      confusing_clauses: confusingClauses,
-      suggested_questions: suggestedQuestions,
-    })
+    .insert(documentData)
     .select()
     .single();
 
   if (error) {
     console.error('❌ Database insert error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
     throw new Error(`Failed to save document: ${error.message}`);
   }
 

@@ -9,6 +9,7 @@ import { KovexChat } from './KovexChat';
 import backend from '~backend/client';
 import { useAuth } from '../hooks/useAuth';
 import { useDocuments } from '../hooks/useDocuments';
+import { toast } from 'react-hot-toast';
 import type { AppState } from '../App';
 
 interface UploadProps {
@@ -44,32 +45,45 @@ export function Upload({ appState, setAppState, onAnalysisComplete, onShowAuth }
     setAnalysisStatus('Analyzing document with AI...');
 
     try {
+      console.log('🔄 Starting document analysis...');
       const result = await backend.legal.analyze({ text });
-      
-      // If user is not logged in, show login prompt
-      if (!user) {
-        setPendingAnalysis({ text, result });
-        setShowLoginPrompt(true);
-        setAppState(prev => ({ ...prev, isAnalyzing: false }));
-        setAnalysisStatus('');
-        return;
-      }
+      console.log('✅ Analysis completed successfully');
 
-      // Save document if user is logged in
-      const title = `Document ${new Date().toLocaleDateString()}`;
-      await saveDocument(
-        title,
-        text,
-        result.simplifiedSections,
-        result.confusingClauses,
-        result.suggestedQuestions
-      );
-
+      // Set the analysis result first
       setAppState(prev => ({
         ...prev,
         analysisResult: result,
         isAnalyzing: false
       }));
+
+      // If user is logged in, save the document
+      if (user) {
+        console.log('💾 User is logged in, saving document...');
+        setAnalysisStatus('Saving document...');
+        
+        try {
+          const title = `Document ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+          await saveDocument(
+            title,
+            text,
+            result.simplifiedSections,
+            result.confusingClauses,
+            result.suggestedQuestions
+          );
+          console.log('✅ Document saved successfully');
+          toast.success('Document analyzed and saved!');
+        } catch (saveError) {
+          console.error('❌ Failed to save document:', saveError);
+          toast.error('Analysis completed but failed to save document');
+        }
+      } else {
+        // If user is not logged in, show login prompt
+        console.log('👤 User not logged in, showing login prompt...');
+        setPendingAnalysis({ text, result });
+        setShowLoginPrompt(true);
+        toast.success('Document analyzed! Sign in to save it.');
+      }
+
       setAnalysisStatus('');
       onAnalysisComplete();
     } catch (error) {
@@ -81,6 +95,7 @@ export function Upload({ appState, setAppState, onAnalysisComplete, onShowAuth }
       );
       setAppState(prev => ({ ...prev, isAnalyzing: false }));
       setAnalysisStatus('');
+      toast.error('Analysis failed. Please try again.');
     }
   };
 
@@ -89,8 +104,9 @@ export function Upload({ appState, setAppState, onAnalysisComplete, onShowAuth }
     onShowAuth();
   };
 
-  const handleLoginPromptContinue = () => {
+  const handleLoginPromptContinue = async () => {
     if (pendingAnalysis) {
+      console.log('📄 Continuing with analysis without saving...');
       setAppState(prev => ({
         ...prev,
         analysisResult: pendingAnalysis.result,

@@ -16,7 +16,7 @@ interface HeaderProps {
 export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, signOut, loading } = useAuth();
-  const { documents } = useDocuments();
+  const { documents, loading: documentsLoading } = useDocuments();
 
   const handleSignOut = async () => {
     await signOut();
@@ -36,6 +36,7 @@ export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
 
   // Count documents with flagged clauses
   const flaggedDocuments = documents.filter(doc => doc.confusing_clauses.length > 0).length;
+  const totalDocuments = documents.length;
 
   return (
     <>
@@ -63,7 +64,13 @@ export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
                   <div className="hidden md:flex items-center space-x-2 text-sm">
                     <div className="flex items-center space-x-1 text-gray-400">
                       <FileText className="w-4 h-4" />
-                      <span>{documents.length}</span>
+                      <span className="font-medium">
+                        {documentsLoading ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-gray-400"></div>
+                        ) : (
+                          totalDocuments
+                        )}
+                      </span>
                     </div>
                     {flaggedDocuments > 0 && (
                       <div className="flex items-center space-x-1">
@@ -111,9 +118,9 @@ export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
                       >
                         <User className="mr-2 h-4 w-4" />
                         My Documents
-                        {documents.length > 0 && (
+                        {totalDocuments > 0 && (
                           <Badge variant="outline" className="ml-auto border-gray-600 text-gray-400">
-                            {documents.length}
+                            {documentsLoading ? '...' : totalDocuments}
                           </Badge>
                         )}
                       </DropdownMenuItem>

@@ -47,8 +47,22 @@ export function Header({ onNavigate, onShowDictionary }: HeaderProps) {
               className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => onNavigate?.('home')}
             >
-              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">SL</span>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="https://i.postimg.cc/CxQc69dz/Screenshot-2025-06-24-162019.jpg" 
+                  alt="Speak Legal Logo" 
+                  className="h-10 w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback to text logo if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div className="w-8 h-8 bg-purple-600 rounded-lg items-center justify-center hidden">
+                  <span className="text-white font-bold text-sm">SL</span>
+                </div>
               </div>
               <h1 className="text-xl font-bold text-white">Speak Legal</h1>
             </div>

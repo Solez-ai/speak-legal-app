@@ -11,10 +11,12 @@ export function useAuth() {
 
   const hasFetchedInitialSession = useRef(false);
   const hasShownInitialToast = useRef(false);
+  const authSubscriptionRef = useRef<any>(null);
 
   // ✅ SIGN UP
   const signUp = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
       toast.success('Signup successful! Please check your email to confirm.');
@@ -23,12 +25,15 @@ export function useAuth() {
       const message = error instanceof Error ? error.message : 'Failed to sign up';
       toast.error(message);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   // ✅ SIGN IN
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       // Don't show toast here - let the auth state change handler do it
@@ -37,12 +42,15 @@ export function useAuth() {
       const message = error instanceof Error ? error.message : 'Failed to sign in';
       toast.error(message);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   // ✅ SIGN OUT
   const signOut = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       // Don't show toast here - let the auth state change handler do it
@@ -51,12 +59,15 @@ export function useAuth() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to sign out';
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   // ✅ RESET PASSWORD
   const resetPassword = async (email: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin,
       });
@@ -67,12 +78,15 @@ export function useAuth() {
       const message = error instanceof Error ? error.message : 'Failed to send reset email';
       toast.error(message);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   // ✅ UPDATE PROFILE
   const updateProfile = async (updates: { email?: string; password?: string; [key: string]: any }) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase.auth.updateUser(updates);
       if (error) throw error;
       toast.success('Profile updated!');
@@ -82,6 +96,8 @@ export function useAuth() {
       const message = error instanceof Error ? error.message : 'Failed to update profile';
       toast.error(message);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,6 +108,8 @@ export function useAuth() {
 
     const getInitialSession = async () => {
       try {
+        console.log('🔄 useAuth - Initializing authentication...');
+        
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
@@ -108,6 +126,7 @@ export function useAuth() {
           console.error('❌ useAuth - Session error:', error);
           toast.error(error.message);
         } else {
+          console.log('✅ useAuth - Initial session loaded:', session?.user?.email || 'No session');
           setSession(session);
           setUser(session?.user ?? null);
 
@@ -126,6 +145,11 @@ export function useAuth() {
     };
 
     getInitialSession();
+
+    // Cleanup any existing auth subscription
+    if (authSubscriptionRef.current) {
+      authSubscriptionRef.current.unsubscribe();
+    }
 
     const {
       data: { subscription },
@@ -160,10 +184,16 @@ export function useAuth() {
       }
     });
 
+    authSubscriptionRef.current = subscription;
+
     return () => {
-      subscription.unsubscribe();
+      console.log('🔌 useAuth - Cleaning up auth subscription');
+      if (authSubscriptionRef.current) {
+        authSubscriptionRef.current.unsubscribe();
+        authSubscriptionRef.current = null;
+      }
     };
-  }, [initializing]);
+  }, []); // Empty dependency array to run only once
 
   return {
     user,

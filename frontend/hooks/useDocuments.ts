@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, saveDocument as saveDocumentToSupabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import type { Document } from '../lib/supabase';
@@ -8,12 +8,23 @@ export function useDocuments() {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const subscriptionRef = useRef<any>(null);
+  const hasSetupSubscription = useRef(false);
 
   useEffect(() => {
+    // Cleanup any existing subscription first
+    if (subscriptionRef.current) {
+      console.log('🔌 Cleaning up existing subscription');
+      subscriptionRef.current.unsubscribe();
+      subscriptionRef.current = null;
+      hasSetupSubscription.current = false;
+    }
+
     if (!user) {
       console.log('👤 No user logged in, clearing documents');
       setDocuments([]);
       setLoading(false);
+      hasSetupSubscription.current = false;
       return;
     }
 
@@ -46,61 +57,87 @@ export function useDocuments() {
       }
     };
 
-    fetchDocuments();
+    // Set up real-time subscription only once per user
+    const setupSubscription = () => {
+      if (hasSetupSubscription.current) {
+        console.log('⚠️ Subscription already setup, skipping');
+        return;
+      }
 
-    // Set up real-time subscription for document changes
-    console.log('🔔 Setting up real-time subscription for user:', user.id);
-    
-    const subscription = supabase
-      .channel(`documents:user_id=eq.${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'documents',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('📦 Real-time document change:', payload.eventType, payload.new?.title || payload.old?.title);
-          
-          switch (payload.eventType) {
-            case 'INSERT':
-              if (payload.new) {
-                console.log('➕ Adding new document to state');
-                setDocuments(prev => [payload.new as Document, ...prev]);
-              }
-              break;
-            case 'UPDATE':
-              if (payload.new) {
-                console.log('✏️ Updating document in state');
-                setDocuments(prev => 
-                  prev.map(doc => 
-                    doc.id === payload.new.id ? payload.new as Document : doc
-                  )
-                );
-              }
-              break;
-            case 'DELETE':
-              if (payload.old) {
-                console.log('🗑️ Removing document from state');
-                setDocuments(prev => 
-                  prev.filter(doc => doc.id !== payload.old.id)
-                );
-              }
-              break;
+      console.log('🔔 Setting up real-time subscription for user:', user.id);
+      hasSetupSubscription.current = true;
+      
+      const subscription = supabase
+        .channel(`documents-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'documents',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('📦 Real-time document change:', payload.eventType, payload.new?.title || payload.old?.title);
+            
+            switch (payload.eventType) {
+              case 'INSERT':
+                if (payload.new) {
+                  console.log('➕ Adding new document to state');
+                  setDocuments(prev => {
+                    // Check if document already exists to prevent duplicates
+                    const exists = prev.some(doc => doc.id === payload.new.id);
+                    if (exists) {
+                      console.log('⚠️ Document already exists, skipping insert');
+                      return prev;
+                    }
+                    return [payload.new as Document, ...prev];
+                  });
+                }
+                break;
+              case 'UPDATE':
+                if (payload.new) {
+                  console.log('✏️ Updating document in state');
+                  setDocuments(prev => 
+                    prev.map(doc => 
+                      doc.id === payload.new.id ? payload.new as Document : doc
+                    )
+                  );
+                }
+                break;
+              case 'DELETE':
+                if (payload.old) {
+                  console.log('🗑️ Removing document from state');
+                  setDocuments(prev => 
+                    prev.filter(doc => doc.id !== payload.old.id)
+                  );
+                }
+                break;
+            }
           }
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Subscription status:', status);
-      });
+        )
+        .subscribe((status) => {
+          console.log('📡 Subscription status:', status);
+        });
 
-    return () => {
-      console.log('🔌 Cleaning up document subscription');
-      subscription.unsubscribe();
+      subscriptionRef.current = subscription;
     };
-  }, [user]);
+
+    // Fetch documents and setup subscription
+    fetchDocuments().then(() => {
+      setupSubscription();
+    });
+
+    // Cleanup function
+    return () => {
+      if (subscriptionRef.current) {
+        console.log('🔌 Cleaning up document subscription');
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+      hasSetupSubscription.current = false;
+    };
+  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-runs
 
   const saveDocument = async (
     title: string,
@@ -127,10 +164,8 @@ export function useDocuments() {
       
       console.log('✅ Document saved successfully:', savedDoc.id);
       
-      // The real-time subscription will handle adding it to the state
-      // But we can also add it immediately for better UX
+      // Add document immediately for better UX (real-time will handle duplicates)
       setDocuments(prev => {
-        // Check if document already exists (in case real-time was faster)
         const exists = prev.some(doc => doc.id === savedDoc.id);
         if (exists) {
           return prev;
@@ -168,8 +203,7 @@ export function useDocuments() {
       console.log('✅ Document deleted successfully');
       toast.success(`Deleted: ${title}`);
       
-      // The real-time subscription will handle removing it from the state
-      // But we can also remove it immediately for better UX
+      // Remove document immediately for better UX (real-time will handle consistency)
       setDocuments(prev => prev.filter(doc => doc.id !== id));
     } catch (error) {
       console.error('❌ Failed to delete document:', error);

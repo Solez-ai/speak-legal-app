@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import ReactMarkdown from 'react-markdown';
 import backend from '~backend/client';
 
@@ -38,7 +37,7 @@ What legal topic would you like to learn about today?`,
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -111,22 +110,22 @@ What legal topic would you like to learn about today?`,
   };
 
   return (
-    <Card className="bg-gray-900 border-gray-800 h-[600px] flex flex-col">
-      <CardHeader className="pb-3">
+    <Card className="bg-gray-900 border-gray-800 h-[600px] flex flex-col max-w-full">
+      <CardHeader className="pb-3 flex-shrink-0">
         <CardTitle className="flex items-center space-x-3 text-white">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
             <Bot className="w-5 h-5 text-white" />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <span>Kovex AI</span>
             <p className="text-sm text-gray-400 font-normal">Legal Information Assistant</p>
           </div>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {error && (
-          <div className="px-6 pb-4">
+          <div className="px-6 pb-4 flex-shrink-0">
             <Alert className="bg-red-950/30 border-red-800/30">
               <AlertCircle className="h-4 w-4 text-red-400" />
               <AlertDescription className="text-red-100">
@@ -136,7 +135,10 @@ What legal topic would you like to learn about today?`,
           </div>
         )}
 
-        <div ref={scrollAreaRef} className="flex-1 px-6 overflow-y-auto scroll-area">
+        <div 
+          ref={messagesContainerRef} 
+          className="flex-1 px-6 overflow-y-auto scroll-area min-h-0"
+        >
           <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
@@ -144,7 +146,7 @@ What legal topic would you like to learn about today?`,
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                  className={`max-w-[85%] rounded-lg px-4 py-3 break-words ${
                     message.type === 'user'
                       ? 'bg-purple-600 text-white'
                       : 'bg-gray-800 text-gray-100 border border-gray-700'
@@ -166,19 +168,43 @@ What legal topic would you like to learn about today?`,
                         <div className="prose prose-sm prose-invert max-w-none">
                           <ReactMarkdown
                             components={{
-                              p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-100">{children}</p>,
-                              strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
-                              em: ({ children }) => <em className="text-blue-300">{children}</em>,
-                              ul: ({ children }) => <ul className="list-disc list-inside mb-2 text-gray-100">{children}</ul>,
-                              ol: ({ children }) => <ol className="list-decimal list-inside mb-2 text-gray-100">{children}</ol>,
-                              li: ({ children }) => <li className="mb-1 text-gray-100">{children}</li>,
+                              p: ({ children }) => (
+                                <p className="mb-2 last:mb-0 text-gray-100 break-words">
+                                  {children}
+                                </p>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="text-white font-semibold">
+                                  {children}
+                                </strong>
+                              ),
+                              em: ({ children }) => (
+                                <em className="text-blue-300">
+                                  {children}
+                                </em>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="list-disc list-inside mb-2 text-gray-100">
+                                  {children}
+                                </ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol className="list-decimal list-inside mb-2 text-gray-100">
+                                  {children}
+                                </ol>
+                              ),
+                              li: ({ children }) => (
+                                <li className="mb-1 text-gray-100 break-words">
+                                  {children}
+                                </li>
+                              ),
                               code: ({ children }) => (
-                                <code className="bg-gray-700 text-blue-300 px-1 py-0.5 rounded text-sm">
+                                <code className="bg-gray-700 text-blue-300 px-1 py-0.5 rounded text-sm break-words">
                                   {children}
                                 </code>
                               ),
                               blockquote: ({ children }) => (
-                                <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-300 my-2">
+                                <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-300 my-2 break-words">
                                   {children}
                                 </blockquote>
                               ),
@@ -188,7 +214,7 @@ What legal topic would you like to learn about today?`,
                           </ReactMarkdown>
                         </div>
                       ) : (
-                        <p className="text-white">{message.content}</p>
+                        <p className="text-white break-words">{message.content}</p>
                       )}
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-xs text-gray-400">
@@ -202,9 +228,9 @@ What legal topic would you like to learn about today?`,
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-lg px-4 py-3 bg-gray-800 text-gray-100 border border-gray-700">
+                <div className="max-w-[85%] rounded-lg px-4 py-3 bg-gray-800 text-gray-100 border border-gray-700">
                   <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <Bot className="w-3 h-3 text-white" />
                     </div>
                     <div className="flex items-center space-x-2">
@@ -219,7 +245,7 @@ What legal topic would you like to learn about today?`,
           </div>
         </div>
 
-        <div className="border-t border-gray-800 p-4">
+        <div className="border-t border-gray-800 p-4 flex-shrink-0 bg-gray-900">
           <div className="flex space-x-2">
             <Input
               value={inputMessage}
@@ -232,7 +258,7 @@ What legal topic would you like to learn about today?`,
             <Button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white flex-shrink-0"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -82,6 +82,11 @@ export default function App() {
         analysisResult: null,
         isAnalyzing: false
       });
+      
+      // Scroll to top of the page smoothly when navigating to home
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     }
   };
 
@@ -89,6 +94,11 @@ export default function App() {
     console.log('👁️ Viewing document:', document.title);
     setSelectedDocument(document);
     setCurrentPage('document-viewer');
+    
+    // Scroll to top when viewing a document
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const handleNewDocument = () => {
@@ -100,6 +110,17 @@ export default function App() {
       analysisResult: null,
       isAnalyzing: false
     });
+    
+    // Ensure we scroll to the top and focus on the main content area
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Focus on the main content area for better accessibility
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.focus();
+      }
+    }, 100);
   };
 
   const handleAnalysisComplete = () => {
@@ -134,7 +155,7 @@ export default function App() {
           {currentPage === 'home' && (
             <>
               <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-              <main className="mt-6">
+              <main className="mt-6" tabIndex={-1}>
                 {activeTab === 'upload' && (
                   <Upload 
                     appState={appState} 
@@ -154,25 +175,31 @@ export default function App() {
           )}
 
           {currentPage === 'dashboard' && (
-            <Dashboard 
-              onNewDocument={handleNewDocument}
-              onViewDocument={handleViewDocument}
-              onShowAuth={handleShowAuth}
-            />
+            <main tabIndex={-1}>
+              <Dashboard 
+                onNewDocument={handleNewDocument}
+                onViewDocument={handleViewDocument}
+                onShowAuth={handleShowAuth}
+              />
+            </main>
           )}
 
           {currentPage === 'settings' && (
-            <Settings 
-              onNavigate={handleNavigate}
-              onShowAuth={handleShowAuth}
-            />
+            <main tabIndex={-1}>
+              <Settings 
+                onNavigate={handleNavigate}
+                onShowAuth={handleShowAuth}
+              />
+            </main>
           )}
 
           {currentPage === 'document-viewer' && selectedDocument && (
-            <DocumentViewer 
-              document={selectedDocument}
-              onBack={() => setCurrentPage('dashboard')}
-            />
+            <main tabIndex={-1}>
+              <DocumentViewer 
+                document={selectedDocument}
+                onBack={() => setCurrentPage('dashboard')}
+              />
+            </main>
           )}
         </div>
       </div>

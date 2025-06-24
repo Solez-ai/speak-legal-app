@@ -13,6 +13,7 @@ import { Settings } from './components/Settings';
 import { DocumentViewer } from './components/DocumentViewer';
 import { Navigation } from './components/Navigation';
 import { AuthModal } from './components/AuthModal';
+import { Footer } from './components/Footer';
 import { useAuth } from './hooks/useAuth';
 import type { AnalyzeDocumentResponse } from '~backend/legal/analyze';
 import type { Document } from './lib/supabase';
@@ -125,54 +126,58 @@ export default function App() {
   console.log('🎯 Current page:', currentPage, 'Active tab:', activeTab);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col">
       <Header onNavigate={handleNavigate} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {currentPage === 'home' && (
-          <>
-            <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-            <main className="mt-6">
-              {activeTab === 'upload' && (
-                <Upload 
-                  appState={appState} 
-                  setAppState={setAppState} 
-                  onAnalysisComplete={handleAnalysisComplete}
-                  onShowAuth={handleShowAuth}
-                />
-              )}
-              {activeTab === 'simplified' && <SimplifiedView appState={appState} />}
-              {activeTab === 'clauses' && <ConfusingClauses appState={appState} />}
-              {activeTab === 'questions' && <SuggestedQuestions appState={appState} />}
-              {activeTab === 'downloads' && <Downloads appState={appState} />}
-              {activeTab === 'dictionary' && <Dictionary />}
-              {activeTab === 'about' && <About />}
-            </main>
-          </>
-        )}
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {currentPage === 'home' && (
+            <>
+              <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+              <main className="mt-6">
+                {activeTab === 'upload' && (
+                  <Upload 
+                    appState={appState} 
+                    setAppState={setAppState} 
+                    onAnalysisComplete={handleAnalysisComplete}
+                    onShowAuth={handleShowAuth}
+                  />
+                )}
+                {activeTab === 'simplified' && <SimplifiedView appState={appState} />}
+                {activeTab === 'clauses' && <ConfusingClauses appState={appState} />}
+                {activeTab === 'questions' && <SuggestedQuestions appState={appState} />}
+                {activeTab === 'downloads' && <Downloads appState={appState} />}
+                {activeTab === 'dictionary' && <Dictionary />}
+                {activeTab === 'about' && <About />}
+              </main>
+            </>
+          )}
 
-        {currentPage === 'dashboard' && (
-          <Dashboard 
-            onNewDocument={handleNewDocument}
-            onViewDocument={handleViewDocument}
-            onShowAuth={handleShowAuth}
-          />
-        )}
+          {currentPage === 'dashboard' && (
+            <Dashboard 
+              onNewDocument={handleNewDocument}
+              onViewDocument={handleViewDocument}
+              onShowAuth={handleShowAuth}
+            />
+          )}
 
-        {currentPage === 'settings' && (
-          <Settings 
-            onNavigate={handleNavigate}
-            onShowAuth={handleShowAuth}
-          />
-        )}
+          {currentPage === 'settings' && (
+            <Settings 
+              onNavigate={handleNavigate}
+              onShowAuth={handleShowAuth}
+            />
+          )}
 
-        {currentPage === 'document-viewer' && selectedDocument && (
-          <DocumentViewer 
-            document={selectedDocument}
-            onBack={() => setCurrentPage('dashboard')}
-          />
-        )}
+          {currentPage === 'document-viewer' && selectedDocument && (
+            <DocumentViewer 
+              document={selectedDocument}
+              onBack={() => setCurrentPage('dashboard')}
+            />
+          )}
+        </div>
       </div>
+
+      <Footer />
 
       <AuthModal 
         isOpen={showAuthModal} 

@@ -32,6 +32,8 @@ npm install -g bun
 
 The backend will be available at the URL shown in your terminal (typically `http://localhost:4000`).
 
+
+
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
